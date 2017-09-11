@@ -1,0 +1,139 @@
+\documentclass[a4paper,oneside]{mystyle}
+\usepackage[utf8]{inputenc}
+
+% custom packages
+\usepackage{empheq}
+\usepackage{graphicx}
+\usepackage[font={small}]{caption}
+\usepackage{subcaption}
+\usepackage{framed}
+\usepackage{listings}
+\usepackage{wrapfig}
+\usepackage{sidecap}
+\usepackage{xcolor}
+\usepackage{lineno}
+\usepackage{marvosym}
+\usepackage{xstring}
+\usepackage{mfirstuc}
+\usepackage{pdfpages}
+\usepackage{lipsum}
+\usepackage[explicit]{titlesec}
+\usepackage{cancel}
+\usepackage[noabbrev]{cleveref}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DOCUMENT METADATA
+
+\thesistype{Master thesis}
+\title{ProSLAM student edition: a minimalistic stereo visual SLAM system}
+
+\author{Irvin Aloise}
+\email{aloise.1392066@studenti.uniroma1.it}
+\institute{RoCoCo - Cognitive robot teams laboratory\\[2pt]
+Department of Computer, Control and Management Engineering Antonio Ruberti\\[2pt]
+Sapienza University of Rome}
+
+\supervisors{Prof.\ Dr.\ Giorgio Grisetti}
+\cosupervisors{Eng.\ Dominik Schlegel}
+
+\date{\today}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\lstset { %
+	language=C++,
+	backgroundcolor=\color{black!5}, % set backgroundcolor
+	basicstyle=\footnotesize,% basic font setting
+}
+
+
+%ds colors
+\definecolor{orange}{rgb}{1,0.4,0}
+\definecolor{green}{rgb}{0,0.5,0}
+
+%ds referencing
+\newcommand{\myref}[3]{\hyperref[#1]{#2} (\capitalisewords{#3} \ref{#1})}
+
+%ds blue box
+\definecolor{myblue}{rgb}{.9, .9, 1}
+
+\newlength\mytemplen
+\newsavebox\mytempbox
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}}
+
+\makeatletter
+\newcommand\mybluebox{%
+	\@ifnextchar[%]
+	{\@mybluebox}%
+	{\@mybluebox[0pt]}}
+
+\def\@mybluebox[#1]{%
+	\@ifnextchar[%]
+	{\@@mybluebox[#1]}%
+	{\@@mybluebox[#1][0pt]}}
+
+\def\@@mybluebox[#1][#2]#3{
+	\sbox\mytempbox{#3}%
+	\mytemplen\ht\mytempbox
+	\advance\mytemplen #1\relax
+	\ht\mytempbox\mytemplen
+	\mytemplen\dp\mytempbox
+	\advance\mytemplen #2\relax
+	\dp\mytempbox\mytemplen
+	\colorbox{myblue}{\hspace{1em}\usebox{\mytempbox}\hspace{1em}}}
+
+%ds global definitions
+\def\P{\mathcal P}
+\def\tab{\phantom{tab}}
+\def\homx{\mathbf{\tilde{x}}}
+\def\trans{\mathbf{t}}
+\def\quat{\mathbf{q}}
+\def\state{\mathbf{x}}
+\def\meas{\mathbf{z}}
+\def\error{\mathbf{e}}
+\def\jacob{\mathbf{J}}
+\def\kdtree{\textit{K}-D tree}
+\def\T#1#2{^{#1}T_{#2}}
+\def\t2v#1#2{^{#1}\tau_{#2}}
+\def\deltat2v#1#2{^{#1}\Delta\tau_{#2}}
+\def\chref#1{Chapter~\ref{ch:#1}}
+\def\secref#1{Sec.~\ref{#1}}
+\def\figref#1{Fig.~\ref{#1}}
+\def\tabref#1{Tab.~\ref{#1}}
+\def\eqref#1{Eq.~(\ref{#1})}
+\def\algref#1{Alg.~\ref{#1}}
+\def\lstref#1{Lst.~\ref{#1}}
+\def\ourmethod{\textit{g2o\_slim~}}
+\renewcommand{\thesubfigure}{\Alph{subfigure}}
+
+
+\begin{document}
+	
+\frontmatter
+\begin{titlepage}
+\maketitle
+\cleardoublepage\null
+\thispagestyle{empty}
+\end{titlepage}
+
+\newcounter{notation}
+\input{chapters/0_abstract}
+
+\clearpage
+
+\tableofcontents
+\mainmatter
+\newpage
+\input{chapters/0_introduction}
+\newpage
+\input{chapters/1_state_of_the_art}
+\newpage
+\input{chapters/8_conclusions}
+
+\newpage
+\bibliographystyle{splncs}
+\bibliography{references}
+
+
+%add appendix for dataset class
+\end{document}
