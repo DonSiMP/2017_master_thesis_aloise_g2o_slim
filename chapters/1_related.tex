@@ -52,12 +52,23 @@ GT-SAM is a C++ library developed by Dellaert \textit{et al.} \cite{dellaert2012
 This works - like it has been previously seen in $g^2o$ - also focuses on efficient optimization and takes advantage of the graph sparsity to deliver fast and accurate performances. However, this framework is even more big and complex - over 300 thousands lines of code - making it very difficult to unravel and understand what is under the hood.
 
 \section{HOG-Man}
-Grisetti \textit{et al.} in their work \cite{grisetti2010hogman} proposed an optimization system designed for on-line operations and that is accurate, fast and memory efficient: \textit{HOG-Man} - which stands for Hierarchical Optimization on Manifolds.
+Grisetti \textit{et al.} in their work \cite{grisetti2010hogman} proposed an optimization system designed for accurate, fast and memory efficient on-line operations: \textit{HOG-Man} - which stands for Hierarchical Optimization on Manifolds.
 
-At its core there is a \textit{hierarchical} approach to graph optimization: during on-line mapping, it optimizes only the coarse structure of the environment and not the whole map.
+At its core there is a \textit{hierarchical} approach to graph optimization: during on-line mapping, it optimizes only the coarse structure of the environment and not the whole map. The simplified problem that is solved, however, contains all the relevant information to let the front-end solve properly the data association problem. 
 
-\section{Condensed Measurements}
-\lipsum[1-2]
+It is good to notice, that there are \textit{different level of abstractions}: the bottom is the original input, while higher levels are always more compact. When the top levels are modified, only portions of the underlying ones that are subject to consistent modifications are updated. This method limits the computational power needed for on-line operations while preserving global consistency, outperforming several previous approaches.
 
 \section{Tectonic-SAM}
-\lipsum[1-2]
+Ni \textit{et al.} propose a way to reduce the computational effort due to the linearization update, based on sub-map partitioning: \textit{Tectonic SAM} \cite{ni2007tectonic} - shortened as \textit{T-SAM}.
+
+The original problem is addressed through a \textit{divide and conquer} approach which produces local sub-maps. Those smaller maps are individually optimized and then the local linearization can be cached and reused when sub-maps are combined into a global map, speeding up the linearization process. Sub-maps will have a base node that capture the its global position and the authors showed that, under \textit{mild assumptions}, this approach leads to the exact solution. 
+
+The next iteration - called T-SAM2 \cite{ni2010nestedDiss} - proposes an algorithm that partitions the SLAM factor-graph into a sub-map tree, performing the optimization from leaves to root. In T-SAM the partitioning was done using edge separators. Moreover, T-SAM was not able to maintain hierarchical maps, leading to poor scalability with respect to larger datasets. All those problems were addressed in T-SAM2, where the partitioning is done employing the \textit{nested dissection algorithm} that together with a novel \textit{multi-level} approach provides a more efficient and robust exact solution.
+
+\section{Condensed Measurements}
+The solution of least-squares problems that can be represented as factor-graph - like in SLAM and SfM - is contingent to both \textit{initial estimate} and \textit{sensor models' non-linearities}. Grisetti \textit{et al.} proposed a way to enlarge the convergence basin based on the \textit{divide and conquer} approach that exploits the factor-graph's structure \cite{grisetti2012condensed}. 
+
+The core of this formulation is to divide the graph into \textit{small locally connected sub-graph}, each of which represents a sub-problem that can be robustly solved - like suggest in the previous systems HOG-Man \cite{grisetti2010hogman} and T-SAM \cite{ni2010nestedDiss}. In order to consistently combine the local sub-graphs, the authors build a simple factor-graph from the sub-graphs, constraining the relative positions of the variables in the solution. For this reason, the sub-graphs are called \textit{condensed measurements}. The resulting problem is more convex with respect to the original one and, thus, there are more chances of finding the correct minimum that can be used as initial guess for standard minimization algorithms - e.g. Levenberg-Marquardt.
+
+This formulation allows to recover from bad initial estimations, where most of the other approaches fail - both batch and direct ones - but, unfortunately, it does not deliver real-time performances.
+
