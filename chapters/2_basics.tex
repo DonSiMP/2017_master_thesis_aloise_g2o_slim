@@ -1,4 +1,76 @@
 \chapter{Basics}\label{ch:basics}
-\lipsum
+The goal of this chapter is to introduce the reader to the mathematical fundamentals underlying the system developed. Obviously, it will be a brief overview, therefore, references to literature are provided if the reader would like to go more in detail with the proposed concepts.
 
-\lipsum
+\section{Least Square SLAM}
+In this section it proposed an insight of least-squares state estimation of non-linear stationary systems \cite{charnes1976least-squares}.
+
+Suppose to have a stationary system $\mathcal{W}$ whose state is parametrized by a set of non-observable \textbf{state} variables $\mathbf{x} = \{\mathbf{x}_1, ..., \mathbf{x}_N\}$. Suppose that it is possible to indirectly observe the system state with different generic sensors, those will generate a set of \textbf{measurements} represented by $\mathbf{z} = \{\mathbf{z}_1, ..., \mathbf{z}_K\}$, where $\mathbf{z}_k$ is intended to be the $k^{th}$ measurement. Since the measurements are affected by noise, those are assumed to be \textbf{random variables}. Moreover, the state embeds all the knowledge needed to predict the measurements' distribution.
+
+Since measurements are affected by noise, it is impossible to compute the state given the measurements. What is possible to evaluate, instead, is the states' distribution known the measurements, which can be formalized as following \textit{conditional probability}:
+
+\begin{align} 
+    p\left(\state | \meas\right) &= p\left(\state_1, ..., \state_N | \meas_1, ..., \meas_K\right) = \nonumber \\
+    &= p\left(\state_{1:N} | \meas_{1:K}\right)
+    \label{eq:cond_state_p}
+\end{align}
+
+The probability distribution \ref{eq:cond_state_p} is complex to retrieve in close form, for several reasons: 
+\begin{itemize}
+    \item The mapping between measurements and states can be highly non-linear, producing a multi-modal probability distribution with a complex shape.
+    \item Each measurement $\meas_k$ in general observes only a subset of the state parameters. Moreover, the number of measurements may not be sufficient to fully characterize the state distribution.
+    \item Measurements can be wrong - generating outliers - or it is impossible to map any of the state variable to a specified measurement.
+\end{itemize}
+
+However, what is possible to more easily compute is an estimate of the probability \ref{eq:cond_state_p}. To do so, we analyze the conditional distribution $p\left(\meas_k | \state\right)$: this is a predictive distribution called \textit{sensor model} or \textit{observation model}, which formalizes the probability of having a certain measurement \textit{assuming to know system's state}. Extending this to all the measurements, you will get the following distribution:
+
+\begin{equation}
+    p\left(\mathbf{z} | \mathbf{x}\right) = p\left(\meas_{1:K} | \state_{1:N}\right)
+    \label{eq:likelihood}
+\end{equation}
+
+As it has been stated before, the state fully describes the measurements, rendering the single distributions $p\left(\mathbf{z}_k | \mathbf{x}\right)$ independent from each other. Exploiting this feature, it is possible to rewrite the \ref{eq:likelihood} as follows:
+
+\begin{equation}
+    \label{eq:obs_model_product}
+    p\left(\meas_{1:K} | \state_{1:N}\right) = 
+        \prod_{k = 1}^{K} p\left(\meas_k | \state_{1:N}\right)
+\end{equation}
+
+The equation \ref{eq:obs_model_product} describes the measurements' \textit{likelihood} given the state. Recalling the Bayes rule \cite{bayes-theorem} and applying it to \ref{eq:cond_state_p} you will obtain the following relation:
+
+\begin{align*}
+    p\left(\state_{1:N} | \meas_{1:K}\right) &= \frac{\overbracket{p\left(\meas_{1:K} | \state_{1:N}\right)}^{likelihood} \overbracket{p\left(\state_{1:N}\right)}^{prior}}{\underbracket{p\left(\meas_{1:K}\right)}_{normalizer}} = \\
+    &= \frac{\prod_{k = 1}^{K} p\left(\meas_k | \state_{1:N}\right) p_x}{p_z} = \\
+    &= \eta_{z} p_x \prod_{k = 1}^{K} p\left(\meas_k | \state_{1:N}\right)
+\end{align*}
+
+\noindent In this relation, $p\left(\state_{1:N}\right)$ represents our prior knowledge about the state distribution and, thus, supposing to know nothing about it, it is represented by a uniform distribution whose value is a constant $p_x$. $p\left(\meas_{1:K}\right)$ instead is just a normalizer for the overall probability function and does not depends from the states, therefore it is assumed to be a constant $p_z$. This leads to the following relation:
+
+\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+    p\left(\state_{1:N} | \meas_{1:K}\right) \propto \prod_{k = 1}^{K} p\left(\meas_k | \state_{1:N}\right) 
+    \label{eq:probability_proportionality}
+\end{empheq}
+
+\noindent Equation \ref{eq:probability_proportionality} represents the core of the entire least-square formulation. This will be exploited in the next subsections to approximate the distribution of interest, minimizing a defined cost function.
+
+\subsection{Direct Minimization}
+Starting from the relation \ref{eq:probability_proportionality} it is possible to initialize a minimization problem. Assuming that the measurement are affected by \textit{Additive White Gaussian Noise}, the observation model probability $p\left(\meas_k | \state_{1:N}\right)$ will be described by a Gaussian distribution $\mathcal{N}(\mu, \Omega^{-1})$, leading to the equation
+
+\begin{equation}
+    p\left(\meas_k | \state_{1:N}\right) \propto \exp\left(-(\pred_k - \meas_k) \Omega_k(\pred_k - \meas_k)\right)
+    \label{eq:obs_model_probability}
+\end{equation}
+
+\noindent where $\pred_k$ is the \textbf{prediction} of the measurement given the state, while $\Omega_k = \Sigma_k^{-1}$ represents conditional measurement's information matrix. The predicted measurement $\pred_k$ is a function of the state; in particular it is obtained applying the \textbf{sensor model} $h_k(\cdot)$ to the state, in formul\ae:
+
+\begin{equation}
+    \pred_k = h_k(\state)
+    \label{eq:prediction}
+\end{equation}
+
+\noindent In SLAM - and other similar problems like SfM - the sensor model is a highly non-linear function, making the problem more complex and heavy from a computational point of view. Nevertheless, generally the sensor model is smooth enough to be approximated with its \textit{first-order Taylor expansion} in the neighbor of a linearization point $\linstate$, leading to:
+
+\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+    h_k(\linstate + \dx) \approx h_k(\linstate) + \frac{\partial h_k(\state)}{\partial \state} \bigg\rvert_{\linstate = 0} \dx = h_k(\linstate) + \jacob_k \dx
+    \label{eq:linearization}
+\end{empheq}

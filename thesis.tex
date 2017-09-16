@@ -21,6 +21,8 @@
 \usepackage[explicit]{titlesec}
 \usepackage{cancel}
 \usepackage[noabbrev]{cleveref}
+\usepackage{indentfirst}
+\usepackage{mathtools}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,6 +93,9 @@ Sapienza University of Rome}
 \def\quat{\mathbf{q}}
 \def\state{\mathbf{x}}
 \def\meas{\mathbf{z}}
+\def\pred{\mathbf{\hat{z}}}
+\def\linstate{\mathbf{\breve{\state}}}
+\def\dx{\Delta \state}
 \def\error{\mathbf{e}}
 \def\jacob{\mathbf{J}}
 \def\kdtree{\textit{K}-D tree}
