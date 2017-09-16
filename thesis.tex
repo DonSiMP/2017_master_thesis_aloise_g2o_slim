@@ -94,8 +94,10 @@ Sapienza University of Rome}
 \def\state{\mathbf{x}}
 \def\meas{\mathbf{z}}
 \def\pred{\mathbf{\hat{z}}}
-\def\linstate{\mathbf{\breve{\state}}}
+\def\linstate{\breve{\state}}
+\def\optstate{\state^\star}
 \def\dx{\Delta \state}
+\def\hessian{\mathbf{H}}
 \def\error{\mathbf{e}}
 \def\jacob{\mathbf{J}}
 \def\kdtree{\textit{K}-D tree}
@@ -112,6 +114,9 @@ Sapienza University of Rome}
 \def\ourmethod{\textit{g2o\_slim~}}
 \renewcommand{\thesubfigure}{\Alph{subfigure}}
 
+% mathemagical stuff
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
 
 \begin{document}
 	
