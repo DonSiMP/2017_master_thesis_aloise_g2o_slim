@@ -139,7 +139,43 @@ It is good to notice that equation \ref{eq:quadratic_form} represents a \textit{
 \label{eq:linear_system}
 \end{empheq}
 
-It is good to notice that, if the \textit{sensor model} $h_k(\cdot)$ was a linear function of the state, it was possible to find the minimum in just one iteration. However, since it is almost never the case in our cases of study, a solution must be found iteratively, until convergence is reached. To do so, it is possible to use the \textbf{Gauss-Newton} algorithm. However, algorithm is not guaranteed to converge in general. The convergence is subject to several factors, like the smoothness of the error function used or the initial guess - i.e. if it is close to potential singularity or far from the optimal solution. \textit{Levenberg-Marquardt} iterative algorithm is variation of \textit{Gauss-Newton} that enforces the convergence. It solves a \textit{damped} version of the linear system \ref{eq:linear_system}, described by the following formula:
+
+\begin{algorithm}
+    \label{alg:gn_standard}
+    \caption{Standard Gauss-Newton minimization algorithm}
+    \begin{algorithmic}[1]
+        \Require{Initial guess $\linstate$; a set of measurements $\mathcal{C} = \{\langle\meas_k, \Omega_k\rangle\}$}
+        \Ensure{Optimal solution $\state^\star$}
+        \vspace{10px}
+        \State $F_{new} \leftarrow \breve{F}$ \Comment{compute the current error}
+        \vspace{5px}
+        \While{$\breve{F} - F_{new} > \epsilon$}
+            \State $\breve{F} \leftarrow F_{new}$
+            \State $\mathbf{b} \leftarrow 0$
+            \State $\hessian \leftarrow 0$
+            \vspace{5px}
+            \ForAll{$k \in \{1, ..., K\}$}
+                \State $\pred_k \leftarrow h_k(\linstate)$ \Comment{compute prediction}
+                \State $\error_k \leftarrow \pred_k - \meas_k$ \Comment{compute error}
+                \State $\jacob_k \leftarrow \frac{\partial h_k(\state)}{\partial \state} \bigg\rvert_{\state = \linstate}$ \Comment{compute Jacobian}
+                
+                \State $\hessian_k \leftarrow \jacob_k^T\Omega_k\jacob_k$ \Comment{contribution of $\meas_k$ in $\hessian$}
+                \State $\mathbf{b}_k \leftarrow \jacob_k^T\Omega_k\error_k$ \Comment{contribution of $\meas_k$ in $\mathbf{b}$}
+                
+                \State $\hessian \pluseq \hessian_k$ \Comment{Accumulate contributions in $\hessian$}
+                \State $\mathbf{b} \pluseq \mathbf{b}_k$ \Comment{Accumulate contributions in $\mathbf{b}$}
+            \EndFor
+            \vspace{5px}
+            \State $\dx \leftarrow solve(\hessian\dx = -\mathbf{b})$ \Comment{Solve linear system}
+            \State $\linstate \pluseq \dx $ \Comment{Apply increment}
+            \State $F_{new} \leftarrow F(\linstate)$ \Comment{Update the error}
+        \EndWhile
+        \vspace{5px}
+        \State \Return $\linstate$
+    \end{algorithmic}
+\end{algorithm}
+
+It is good to notice that, if the \textit{sensor model} $h_k(\cdot)$ is a linear function of the state, it is possible to find the minimum in just one iteration. However, since it is almost never the case in our cases of study, a solution must be found iteratively, until convergence is reached. To do so, it is possible to use the \textbf{Gauss-Newton} algorithm - described in \hyperref[alg:gn_standard]{Algorithm 1}. However, \textit{Gauss-Newton} is not guaranteed to converge in general. The convergence is subject to several factors, like the smoothness of the error function used or the initial guess - i.e. if it is close to potential singularity or far from the optimal solution. \textit{Levenberg-Marquardt} iterative algorithm is variation of \textit{Gauss-Newton} that enforces the convergence - shown in detail in \hyperref[alg:lm_standard]{Algorithm 2}. It solves a \textit{damped} version of the linear system \ref{eq:linear_system}, described by the following formula:
 
 \begin{equation}
     \left(\hessian + \lambda\mathbf{I}\right)\dx = -\mathbf{b}
@@ -148,4 +184,235 @@ It is good to notice that, if the \textit{sensor model} $h_k(\cdot)$ was a linea
 
 \noindent where $\lambda$ is a scalar \textit{damping} factor. The algorithm does not diverge, but it may converge to a \textit{local minimum} and, thus, retrieving a sub-optimal solution. 
 
-It is good to notice that the system developed in this work uses the \textit{Gauss-Newton} algorithm, since the error function has been properly manipulated to be more linear with respect to other approaches. Obviously, more details can be found in the next chapters.
+
+\begin{algorithm}[!h]
+    \label{alg:lm_standard}
+    \caption{Standard Levenberg-Marquardt minimization algorithm}
+    \begin{algorithmic}[1]
+        \Require{Initial guess $\linstate$; a set of measurements $\mathcal{C} = \{\langle\meas_k, \Omega_k\rangle\}$}
+        \Ensure{Optimal solution $\state^\star$}
+        \vspace{10px}
+        \State $F_{new} \leftarrow \breve{F}$ \Comment{compute the current error}
+        \State $\state_{backup} \leftarrow \linstate$ \Comment{backup the solution}
+        \State $\lambda \leftarrow \text{computeInitialLambda}(\mathcal{C}, \linstate)$
+        \vspace{5px}
+        \While{$\breve{F} - F_{new} > \epsilon \wedge t < t_{max}$}
+        \State $\breve{F} \leftarrow F_{new}$
+        \State $\mathbf{b} \leftarrow 0$
+        \State $\hessian \leftarrow 0$
+        \vspace{5px}
+        \ForAll{$k \in \{1, ..., K\}$}
+        \State $\pred_k \leftarrow h_k(\linstate)$ \Comment{compute prediction}
+        \State $\error_k \leftarrow \pred_k - \meas_k$ \Comment{compute error}
+        \State $\jacob_k \leftarrow \frac{\partial h_k(\state)}{\partial \state} \bigg\rvert_{\state = \linstate}$ \Comment{compute Jacobian}
+        
+        \State $\hessian_k \leftarrow \jacob_k^T\Omega_k\jacob_k$ \Comment{contribution of $\meas_k$ in $\hessian$}
+        \State $\mathbf{b}_k \leftarrow \jacob_k^T\Omega_k\error_k$ \Comment{contribution of $\meas_k$ in $\mathbf{b}$}
+        
+        \State $\hessian \pluseq \hessian_k$ \Comment{accumulate contributions in $\hessian$}
+        \State $\mathbf{b} \pluseq \mathbf{b}_k$ \Comment{accumulate contributions in $\mathbf{b}$}
+        \EndFor
+        
+        \State $t \leftarrow 0$ \Comment{n. of iterations $\lambda$ has been adjusted}
+        
+        \vspace{5px}
+        \While{$t < t_{max} \wedge t > 0$}
+        \State $\dx \leftarrow solve\left((\hessian + \lambda I)\dx = \bvec\right)$ \Comment{solve damped linear system}
+        \State $\linstate \pluseq \dx$ \Comment{apply increment}
+        \State $F_{new} \leftarrow F(\linstate)$ \Comment{update the error}
+        \If{$F_{new} < \breve{F}$}
+        \State $\lambda \leftarrow \nicefrac{\lambda}{2}$ \Comment{good step, accept the solution}
+        \State $\state_{backup} \leftarrow \linstate$
+        \State $t \leftarrow t - 1$
+        \Else
+        \State $\lambda \leftarrow \lambda * 4$ \Comment{bad step, revert the solution}
+        \State $\linstate \leftarrow \state_{backup}$
+        \State $t \leftarrow t + 1$
+        \EndIf
+        \EndWhile
+        \vspace{5px}
+        
+        \EndWhile
+        \vspace{5px}
+        \State \Return $\linstate$
+    \end{algorithmic}
+\end{algorithm}
+
+It is good to notice that the system developed in this work uses the \textit{Gauss-Newton} algorithm, since the error function has been properly manipulated to be more linear with respect to other approaches. Obviously, more details can be found in the next Chapters.
+
+\section{Manifolds}
+In the previous Section it has been shown how to compute the optimal solution to the problem through Least-Squares estimation. However, two strong assumptions have been made:
+
+\begin{enumerate}
+    \item The measurement function is smooth enough to be approximated by its \textit{first-order Taylor expansion} without loss of generality
+    \item The state space spans over an \textit{Euclidean domain}, and, thus $\state \in \mathbb{R}^n$
+\end{enumerate}
+
+
+\noindent While the first hypothesis is true in general, the second one is almost never verified in SLAM problems. For example, if the state of the system is the robot 3D-pose, it involves to deal \textit{Euler angles} or rotations in general; therefore the state belongs to $SE(3)$ - namely the \textit{Special Euclidean group} of dimension 3. In this topological spaces, operations like \textit{sum} or the \textit{product} are not defined as in $\mathbb{R}^n$, thus they are illegal - i.e. summing 2 triads of Euler angles will lead to an inconsistent result or to singular configurations.
+
+However, in SLAM - as in SfM or BA - the state generally belongs to \textit{topological spaces} that \textit{locally resemble} the Euclidean space, called \textbf{manifolds}. This means that each point of an $n-$dimensional manifold has a neighborhood that is homeomorphic to $\mathbb{R}^n$. Examples of manifolds are spheres or toruses, which are \textit{locally} flat - the reader can think to the Earth that, for its inhabitants, seems flat.
+
+Stepping back to our problem, it is possible for us to use this property to perform Least-Square estimation also with state spaces that are manifold. Assuming that our state belongs to $SO(3)$ - 3D rotations - if we represent it through a rotation matrix $\rot(\phi, \theta, \psi)$ it is not possible to simply sum two quantities since it is not enforced the matrix's orthogonality. A minimal representation, instead, $\state = (\phi, \theta, \psi)$ will lead to singularities. However, if we are in a neighborhood of the origin, Euler angles are away from singularities. Thus we can define an operator \textit{box-plus} that locally sums two quantities, exploiting manifold's property. The same must be done for other mathematical operators. In the case of rotation, we can define the following operators:
+
+\begin{align}
+    \label{eq:bp_rotations}
+    \rot &= \rot_0 \boxplus \mathbf{u} = toMatrix(\mathbf{u})\, \rot_0\\
+    \mathbf{u} &= \rot \boxminus \rot_0 = toEuler(\rot_0^{T} \, \rot)
+    \label{eq:bm_rotations}
+\end{align}
+
+\noindent The operators $\boxminus$ and $\boxplus$ convert a global difference in the manifold into a local perturbation and vice versa.
+
+Now we have to feed this new formalizations to the previously seen Least-Squares algorithm. From now on, $\SState$ indicates the over-parametrized representation of the state, while $\state$ the minimal one - i.e. a vector. Recalling the equation \ref{eq:linearization}, to linearize the problem it is necessary to apply a perturbation $\dx$ to the current estimate of the state $\Linstate$. However, to do so, it must be employed the new operator \textit{sum}. Moreover, $\Linstate$ can be treated as a constant since is the current estimate of the system; still, it is possible to span the state space by varying $\delta\state$ (minimal representation). Therefore, the first order Taylor expansion of $h_k(\Linstate \boxplus \dx)$ is computed with respect to $\dx$, in the linearization point $\dx = 0$. This leads to the following new formulation:
+
+\begin{empheq}[box={\mybluebox[5pt]}]{equation}
+    h_k(\Linstate \boxplus \dx) \approx h_k(\Linstate) + \underbracket{\frac{\partial h_k(\SState \boxplus \dx)}{\partial \dx} \bigg\rvert_{\dx = 0}}_{\tjacob_k} \dx = h_k(\Linstate) + \tjacob_k \dx
+    \label{eq:linearization_manifold}
+\end{empheq}
+
+\noindent It is good to notice that the formulation \ref{eq:linearization_manifold} is topologically similar to the equation \ref{eq:linearization} with obvious difference due to the manifold state space. 
+
+As a consequence of what we have seen so far, in order to compute the optimal $\Linstate$, the operator $\boxplus$ must be used to apply the optimal increment, leading to the following relation:
+
+\begin{equation}
+    \SState^\star = \Linstate \boxplus \dx^\star
+\end{equation}
+
+Until now, it has been assumed that the measurements lie on $\mathbb{R}^n$. However, in our case of study, those may lie on a manifold too. This means that we have to define some new mathematical operators and minimal/redundant representations also for them, like it has been done for the states. In particular, we know that the generic error function is $\error_k(x) = h_k(\state) - \meas_k$; now it is necessary to introduce the new operator \textit{difference}, that leads to the following error formulation:
+
+\begin{equation}
+    \terror_k(\SState) = \terror_k(\pred_k, \meas_k) = h_k(\SState) \boxminus \meas_k
+    \label{eq:error_manifold}
+\end{equation}
+
+\noindent Equation \ref{eq:error_manifold} computes the error between the predicted measurement and the actual one in the minimal space, centering the computation in $\meas_k$. In general the error function will be smooth and regular even using the operator $\boxplus$, since the displacement between $h_k(\SState)$ and $\meas_k$ is generally small.
+
+Applying a small perturbation $\dx$ to the \textit{prediction}, it is possible to compute the first order Taylor expansion of the error, which gives the following result:
+
+\begin{align}
+    \terror_k(\pred_k + \dz_k, \meas_k) &= (\pred_k + \dz_k) \boxminus \meas_k \approx \nonumber \\
+    &\approx \pred_k \boxminus \meas_k + \underbracket{\frac{\partial\left((\pred_k + \dz_k) \boxminus \meas_k\right)}{\partial\dz_k}  \bigg\rvert_{\dz_k = 0}}_{\jacob_{\meas_k}} \dz_k
+    \label{eq:error_linearization}
+\end{align}
+
+\noindent It is good to notice that the approximation of the error conditional distribution is described by a Gaussian with mean $\pred_k \boxminus \meas_k$ and covariance $\Sigma_{\error_k|\state} = \jacob_{\meas_k}\Omega_k^{-1}\jacob_{\meas_k}^T$. The reader must notice that projecting the measurement onto a minimal space using the operator $\boxminus$ makes the covariance of the conditional error distribution a function of the state - since it depends by $\pred_k$. Therefore, $\Sigma_{\error_k|\state}$ must be computed at every iteration. However, in our work we manged to keep the error function Euclidean, avoiding the computation of $\Sigma_{\error_k|\state}$ even if the measurements lie on $SE(3)$ - e.g. in the case of pose measurements like the ones generated by the odometry. 
+
+In order to simplify the computation $\tjacob_k$ it is possible to exploit the chain rule for partial derivatives, which leads to following relation
+
+\begin{equation}
+    \frac{\partial\, \error_k\left(\linstate \boxplus \dx\right)}{\partial \dx} = \underbracket{\frac{\partial \error_k(\state)}{\partial \state} \bigg\rvert_{\state = \linstate}}_{\jacob_k} + \underbracket{\frac{\partial (\linstate \boxplus \dx)}{\partial \dx} \bigg\rvert_{\dx = 0}}_{\mathbf{M}}
+    \label{eq:jacobian_chain_rule}
+\end{equation}
+
+\noindent where $\jacob_k$ is the simple Jacobian computed in the Euclidean case, while $\mathbf{M}$ represents the derivate of $\boxplus$ operator evaluated in $\linstate$. Given this, the total Jacobian $\tjacob_k$ computed on a manifold is described by the relation
+
+\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+    \tjacob_k = \jacob_k \mathbf{M}
+    \label{eq:jacobian_manifold}
+\end{empheq}
+
+Finally, it is possible to plug all this new elements in the modified version of the \textit{Gauss-Newton} algorithm - or the \textit{Levenberg-Marquardt} one - to perform the optimization process properly with non-euclidean states and measurements, explained in detail in \hyperref[alg:gn_manifolds]{Algorithm 3}.
+
+\begin{algorithm}[h]
+    \label{alg:gn_manifolds}
+    \caption{Gauss-Newton minimization algorithm for manifold measurements and state spaces}
+    \begin{algorithmic}[1]
+        \Require{Initial guess $\linstate$; a set of measurements $\mathcal{C} = \{\langle\meas_k, \Omega_k\rangle\}$}
+        \Ensure{Optimal solution $\state^\star$}
+        \vspace{10px}
+        \State $F_{new} \leftarrow \breve{F}$ \Comment{compute the current error}
+        \vspace{5px}
+        \While{$\breve{F} - F_{new} > \epsilon$}
+            \State $\breve{F} \leftarrow F_{new}$
+            \State $\mathbf{b} \leftarrow 0$
+            \State $\hessian \leftarrow 0$
+            \vspace{5px}
+            \ForAll{$k \in \{1, ..., K\}$}
+                \State $\pred_k \leftarrow h_k(\linstate)$ \Comment{compute prediction}
+                
+                \State $\error_k \leftarrow \pred_k \boxminus \meas_k$ \Comment{compute error with over-parametrized $\meas_k$}
+                
+                \State $\tjacob_k \leftarrow \frac{\partial \terror_k(h_k(\SState \boxplus \dx), \meas_k)}{\partial \dx_k} \bigg\rvert_{\dx_k = 0}$ \Comment{compute Jacobian of the error function}
+                
+                \State $\jacob_{\meas_k} \leftarrow \frac{\partial \left((\pred_k + \dz_k) \boxminus \meas_k\right)}{\partial \dz_k} \bigg\rvert_{\dz_k = 0}$ \Comment{compute Jacobian of the $\boxminus$ w.r.t. $\dz_k$}
+                
+                \State $\tilde{\Omega}_k \leftarrow \jacob_{\meas_k}^{T}\Omega_k\jacob_{\meas_k}$ \Comment{Remap the information matrix}
+                
+                \State $\hessian_k \leftarrow \jacob_k^T\tilde{\Omega}_k\jacob_k$ \Comment{contribution of $\meas_k$ in $\hessian$}
+                
+                \State $\mathbf{b}_k \leftarrow \jacob_k^T\tilde{\Omega}_k\error_k$ \Comment{contribution of $\meas_k$ in $\mathbf{b}$}
+                
+                \State $\hessian \pluseq \hessian_k$ \Comment{Accumulate contributions in $\hessian$}
+                \State $\mathbf{b} \pluseq \mathbf{b}_k$ \Comment{Accumulate contributions in $\mathbf{b}$}
+            \EndFor
+            \vspace{5px}
+            \State $\dx \leftarrow solve(\hessian\dx = -\mathbf{b})$ \Comment{Solve linear system}
+            \State $\linstate \leftarrow \linstate \boxplus \dx $ \Comment{Apply increment}
+            \State $F_{new} \leftarrow F(\linstate)$ \Comment{Update the error}
+        \EndWhile
+        \vspace{5px}
+        \State \Return $\linstate$
+    \end{algorithmic}
+\end{algorithm}
+
+\section{Sparse Least Squares}
+In the previous Sections it has been introduced several powerful tools to estimate a set of hidden variables given a set of measurements that are related to those variables. However, the state vector - especially in SLAM applications - may easily become big and, thus, it creates a big bottleneck that kills the performances. Still, it is possible to overcome this dimensional problem exploiting the nature of the measurements. In fact, a single measurement $\meas_k$ depends only by a \textit{subset} $\state_k = \state_{r:s} = \{\state_r, ..., \state_s\} \subseteq \state_{1:N} $ of the whole state vector and this will lead to special structure of the \textit{Hessian} matrix $\hessian$.
+
+Going deeper in this analysis, it is good to notice that each measurement contributes to the \textit{Hessian} $\hessian$ and the \textit{right-hand-side vector} $\bvec$ with just one addend - namely $\hessian_k$ and $\bvec_k$. The structure of those quantities depends by the Jacobian of the error function and this last one depends only by the state variables involved by the measurement. 
+
+Recalling equations \ref{eq:linearization} and \ref{eq:jacobian_manifold} and on the basis of what just stated, \textit{Jacobian}'s structure will be:
+
+\begin{equation}
+    \jacob_k = \underbracket{\left[\zero \cdots \zero \: \jacob_{k_1} \zero \cdots \zero \: \jacob_{k_h} \zero \cdots \zero \: \jacob_{k_q} \zero \cdots \zero\right]}_{N blocks}
+    \label{eq:sparse_jacobian}
+\end{equation}
+
+\noindent where each non-zero component $\jacob_{k_h} = \frac{\partial \error_k(\state_k)}{\partial \state_{k_h}}$ represents the partial derivative of the error function deriving from $\meas_k$, computed with respect to the parameter block $\state_{k_h} \in \state_k$. According to equation \ref{eq:quadratic_form_k}, the contribution to $\hessian$ and $\bvec$ will have the following anatomy:
+
+\begin{align}
+    \label{eq:sparse_hessian_structure}
+    \hessian_k &= 
+        \begin{pmatrix}
+            \ddots &  &  &  &  &  &\\
+             & \jacob_{k_1}^T\Omega_k\jacob_{k_1} & \cdots & \jacob_{k_1}^T\Omega_k\jacob_{k_h} & \cdots & \jacob_{k_1}^T\Omega_k\jacob_{k_q} & \\
+             & \vdots & & \vdots & & \vdots & \\
+             & \jacob_{k_h}^T\Omega_k\jacob_{k_1} & \cdots & \jacob_{k_h}^T\Omega_k\jacob_{k_h} & \cdots & \jacob_{k_h}^T\Omega_k\jacob_{k_q} & \\
+             & \vdots & & \vdots & & \vdots & \\
+             & \jacob_{k_q}^T\Omega_k\jacob_{k_1} & \cdots & \jacob_{k_q}^T\Omega_k\jacob_{k_h} & \cdots & \jacob_{k_q}^T\Omega_k\jacob_{k_q} & \\
+             &  &  &  &  &  & \ddots \\
+        \end{pmatrix} \\
+    \bvec_k &= 
+        \begin{bmatrix}
+            \vdots \\
+            \jacob_{k_1}\Omega_k\error_k \\
+            \vdots \\
+            \jacob_{k_h}\Omega_k\error_k \\
+            \vdots \\
+            \jacob_{k_q}\Omega_k\error_k \\
+            \vdots
+        \end{bmatrix}
+    \label{eq:rhs_structure}
+\end{align}
+
+The internal structure of $\hessian$ and $\bvec$ just shown, reveals some important properties of those objects:
+
+\begin{itemize}
+    \item $\bvec$ is a \textbf{dense vector} composed by $N$ non-zero blocks. 
+    \item The Hessian $\hessian$ is a \textbf{sparse symmetric matrix}.
+    \item Every new measurements $q$ introduces $q^2$ non zero blocks in the Hessian.
+\end{itemize}
+
+Hessian's sparsity is fundamental to perform efficient and fast optimization, especially to solve the linear system \ref{eq:linear_system}. The literature proposes many approaches to efficiently solve sparse linear systems, either with \textit{direct} \cite{davis2006directSPsolvers} or \textit{iterative} \cite{saad2003iterativeSPsolvers} methods. One of the most employed direct method uses the \textit{Cholesky} factorization of the matrix - namely the $LU$ decomposition. In this case, the Hessian is decomposed in two triangular matrices $\hessian = \mathbf{L}\mathbf{U}$, where $\mathbf{U} = \mathbf{L}^T$ and $\mathbf{L}$ is a \textit{lower-triangular matrix}. The solution to the original system is found solving consecutively the following derived systems:
+
+\begin{equation}
+    \label{eq:fwd_bwd_sub}
+    \begin{cases}
+        \mathbf{L}\,\mathbf{y} &= \bvec \\
+        \mathbf{U}\,\dx &= \mathbf{y}
+    \end{cases}
+\end{equation}
+
+\noindent Since $L$ and $U$ are triangular matrices, the solutions of equations \ref{eq:fwd_bwd_sub} can be easily computed through \textit{Forward} and \textit{Backward Substitution} respectively. It is good to notice that the \textit{Cholesky} decomposition of a sparse matrix will have a greater number of non-zero entries than the source, due to the \textit{fill-in} deriving from the decomposition itself. However, it is possible to reduce the \textit{fill-in} with several techniques, like \textit{variable reordering}. This is achieved pre and post-multiplying the source matrix - $\hessian$ - for a suitable \textit{permutation matrix} $\mathbf{P}$. The \textit{Cholesky} factorization will be done to the permuted matrix $\mathbf{P}\hessian \mathbf{P}^T = \hat{\mathbf{L}}\hat{\mathbf{U}}$, preserving the sparsity and, thus, leading to faster solution of the linear system. 
+
+The literature proposes a lot of theory on how to retrieve the good ordering to reduce the fill-in, and many algorithm are able to achieve good performances. 

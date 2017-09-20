@@ -23,6 +23,11 @@
 \usepackage[noabbrev]{cleveref}
 \usepackage{indentfirst}
 \usepackage{mathtools}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{hyperref}
+\usepackage{nicefrac}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,22 +91,33 @@ Sapienza University of Rome}
 	\colorbox{myblue}{\hspace{1em}\usebox{\mytempbox}\hspace{1em}}}
 
 %ds global definitions
+\def\zero{\mathbf{0}}
 \def\P{\mathcal P}
 \def\tab{\phantom{tab}}
 \def\homx{\mathbf{\tilde{x}}}
 \def\trans{\mathbf{t}}
 \def\quat{\mathbf{q}}
 \def\state{\mathbf{x}}
+\def\SState{\mathbf{X}}
 \def\meas{\mathbf{z}}
-\def\pred{\mathbf{\hat{z}}}
+\def\tmeas{\tilde{\meas}}
+\def\Meas{\mathbf{Z}}
+\def\pred{\hat{\meas}}
 \def\linstate{\breve{\state}}
+\def\Linstate{\breve{\SState}}
 \def\optstate{\state^\star}
+\def\Optstate{\State^\star}
 \def\dx{\Delta \state}
+\def\dz{\Delta \meas}
 \def\hessian{\mathbf{H}}
+\def\bvec{\mathbf{b}}
 \def\error{\mathbf{e}}
+\def\terror{\tilde{\error}}
 \def\jacob{\mathbf{J}}
+\def\tjacob{\tilde{\jacob}}
 \def\kdtree{\textit{K}-D tree}
 \def\T#1#2{^{#1}T_{#2}}
+\def\rot{\mathbf{R}}
 \def\t2v#1#2{^{#1}\tau_{#2}}
 \def\deltat2v#1#2{^{#1}\Delta\tau_{#2}}
 \def\chref#1{Chapter~\ref{ch:#1}}
@@ -117,6 +133,18 @@ Sapienza University of Rome}
 % mathemagical stuff
 \DeclareMathOperator*{\argmax}{argmax}
 \DeclareMathOperator*{\argmin}{argmin}
+\newcommand{\pluseq}{\mathrel{+}=}
+\newcommand{\asteq}{\mathrel{*}=}
+
+% indentation stuff
+\newlength\myindent
+\setlength\myindent{2em}
+\newcommand\bindent{%
+    \begingroup
+    \setlength{\itemindent}{\myindent}
+    \addtolength{\algorithmicindent}{\myindent}
+}
+\newcommand\eindent{\endgroup}
 
 \begin{document}
 	
