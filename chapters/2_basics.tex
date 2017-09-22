@@ -1,7 +1,7 @@
 \chapter{Basics}\label{ch:basics}
 The goal of this chapter is to introduce the reader to the mathematical fundamentals underlying the system developed. Obviously, it will be a brief overview, therefore, references to literature are provided if the reader would like to go more in detail with the proposed concepts.
 
-\section{Least Square SLAM}
+\section{Least Square SLAM}\label{sec:ls_formulation}
 In this section it proposed an insight of least-squares state estimation of non-linear stationary systems \cite{charnes1976least-squares}.
 
 Suppose to have a stationary system $\mathcal{W}$ whose state is parametrized by a set of non-observable \textbf{state} variables $\mathbf{x} = \{\mathbf{x}_1, ..., \mathbf{x}_N\}$. Suppose that it is possible to indirectly observe the system state with different generic sensors, those will generate a set of \textbf{measurements} represented by $\mathbf{z} = \{\mathbf{z}_1, ..., \mathbf{z}_K\}$, where $\mathbf{z}_k$ is intended to be the $k^{th}$ measurement. Since the measurements are affected by noise, those are assumed to be \textbf{random variables}. Moreover, the state embeds all the knowledge needed to predict the measurements' distribution.
@@ -53,7 +53,7 @@ The equation \ref{eq:obs_model_product} describes the measurements' \textit{like
 
 \noindent Equation \ref{eq:probability_proportionality} represents the core of the entire least-square formulation. This will be exploited in the next subsections to approximate the distribution of interest, minimizing a defined cost function.
 
-\subsection{Direct Minimization}
+\subsection{Direct Minimization}\label{sec:direct_minimization}
 Starting from the relation \ref{eq:probability_proportionality} it is possible to initialize a minimization problem. Assuming that the measurement are affected by \textit{Additive White Gaussian Noise}, the observation model probability $p\left(\meas_k | \state_{1:N}\right)$ will be described by a Gaussian distribution $\mathcal{N}(\mu, \Omega^{-1})$, leading to the equation
 
 \begin{equation}
@@ -356,7 +356,7 @@ Finally, it is possible to plug all this new elements in the modified version of
     \end{algorithmic}
 \end{algorithm}
 
-\section{Sparse Least Squares}
+\section{Sparse Least Squares}\label{sec:sparse_ls}
 In the previous Sections it has been introduced several powerful tools to estimate a set of hidden variables given a set of measurements that are related to those variables. However, the state vector - especially in SLAM applications - may easily become big and, thus, it creates a big bottleneck that kills the performances. Still, it is possible to overcome this dimensional problem exploiting the nature of the measurements. In fact, a single measurement $\meas_k$ depends only by a \textit{subset} $\state_k = \state_{r:s} = \{\state_r, ..., \state_s\} \subseteq \state_{1:N} $ of the whole state vector and this will lead to special structure of the \textit{Hessian} matrix $\hessian$.
 
 Going deeper in this analysis, it is good to notice that each measurement contributes to the \textit{Hessian} $\hessian$ and the \textit{right-hand-side vector} $\bvec$ with just one addend - namely $\hessian_k$ and $\bvec_k$. The structure of those quantities depends by the Jacobian of the error function and this last one depends only by the state variables involved by the measurement. 
@@ -403,7 +403,7 @@ The internal structure of $\hessian$ and $\bvec$ just shown, reveals some import
     \item Every new measurements $q$ introduces $q^2$ non zero blocks in the Hessian.
 \end{itemize}
 
-Hessian's sparsity is fundamental to perform efficient and fast optimization, especially to solve the linear system \ref{eq:linear_system}. The literature proposes many approaches to efficiently solve sparse linear systems, either with \textit{direct} \cite{davis2006directSPsolvers} or \textit{iterative} \cite{saad2003iterativeSPsolvers} methods. One of the most employed direct method uses the \textit{Cholesky} factorization of the matrix - namely the $LU$ decomposition. In this case, the Hessian is decomposed in two triangular matrices $\hessian = \mathbf{L}\mathbf{U}$, where $\mathbf{U} = \mathbf{L}^T$ and $\mathbf{L}$ is a \textit{lower-triangular matrix}. The solution to the original system is found solving consecutively the following derived systems:
+Hessian's sparsity is fundamental to perform efficient and fast optimization, especially to solve the linear system \ref{eq:linear_system}. The literature proposes many approaches to efficiently solve sparse linear systems, either with \textit{direct} \cite{davis2006directSPsolvers} or \textit{iterative} \cite{saad2003iterativeSPsolvers} methods. One of the most employed direct method uses the \textit{Cholesky} factorization of the matrix - namely the $LU$ decomposition. In this case, the Hessian is decomposed into two triangular matrices $\hessian = \mathbf{L}\mathbf{U}$, where $\mathbf{U} = \mathbf{L}^T$ and $\mathbf{L}$ is a \textit{lower-triangular matrix}. The solution to the original system is found solving consecutively the following derived systems:
 
 \begin{equation}
     \label{eq:fwd_bwd_sub}
@@ -415,4 +415,21 @@ Hessian's sparsity is fundamental to perform efficient and fast optimization, es
 
 \noindent Since $L$ and $U$ are triangular matrices, the solutions of equations \ref{eq:fwd_bwd_sub} can be easily computed through \textit{Forward} and \textit{Backward Substitution} respectively. It is good to notice that the \textit{Cholesky} decomposition of a sparse matrix will have a greater number of non-zero entries than the source, due to the \textit{fill-in} deriving from the decomposition itself. However, it is possible to reduce the \textit{fill-in} with several techniques, like \textit{variable reordering}. This is achieved pre and post-multiplying the source matrix - $\hessian$ - for a suitable \textit{permutation matrix} $\mathbf{P}$. The \textit{Cholesky} factorization will be done to the permuted matrix $\mathbf{P}\hessian \mathbf{P}^T = \hat{\mathbf{L}}\hat{\mathbf{U}}$, preserving the sparsity and, thus, leading to faster solution of the linear system. 
 
-The literature proposes a lot of theory on how to retrieve the good ordering to reduce the fill-in, and many algorithm are able to achieve good performances. 
+The literature proposes a lot of theory on how to retrieve the good ordering to reduce the fill-in, minimize the \textit{flops} or to exploit parallel computation. Some of the most effective orderings to reduce the fill-in are computed by \textit{Minimum Degree} \cite{amestoy1996amd, davis2004colamd}, \textit{super-nodal} \cite{cleveland1987supernodal} and \textit{nested dissection based} algorithms \cite{karypis1998metis}. It is good to notice that this is an \textit{NP-hard} problem and several libraries have been developed to compute orderings in a fast and efficient way \cite{agarwal2012variable}.
+
+\section{Factor Graph}\label{sec:factor_graph}
+Until now, it has been showed the methodology to solve a least-squares minimization problem whose cost function is given by \ref{eq:cost_function}. In the previous Section, it has been underlined the \textit{sparsity} of the problem. In particular it has been stated that, given the state $\state = \left(\state_1, ..., \state_N\right)$, the measurement $\meas_k$ represents a \textbf{constraint} relating only a subset of the whole state vector, namely $\state_k = \left(\state_{k_1}, ..., \state_{k_q}\right) \subseteq \state = \left(\state_1, ..., \state_N\right)$. In this sense, the error $\error_k(\pred_k, \meas_k)$ describes how well the parameter blocks in $\state_k$ satisfy the constraint $\meas_k$ and, in fact, it is $\zero$ when $\state_k$ perfectly matches the constraint.
+
+A problem that has this formulation, can be easily represented with a \textit{directed hyper-graph}, where
+
+\begin{itemize}
+    \item Each parameter block $\state_i \in \state_k$ represents a node $i$ in the hyper-graph
+    \item Each constraint $\meas_k$ represents an hyper-edge that links all the nodes $\state_i \in \state_k$.
+\end{itemize}
+
+\noindent Obviously, when the hyper-edges have size $2$, the graph becomes an ordinary graph. 
+
+Graph-based formulations are very common for the SLAM problem, since they help the optimization process and, in fact, most of the current state-of-the-art systems are based on this formulation. In fact, exploiting the \textit{topology} of the graph it is possible to achieve better performances, both in terms of speed and accuracy of the solution.
+
+\vspace{15px}
+Now that the underlying theory has been exploited, it is possible to better explain the typical formulations of the problem addressed in SLAM. Therefore, the next Chapter will propose an overview of the most common ones, in particular for 3D environments.
