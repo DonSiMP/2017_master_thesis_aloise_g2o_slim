@@ -52,11 +52,142 @@ Finally, Jacobians must be computed and, to do so, we apply a perturbation to th
 
 \noindent The final Jacobian will be non-zero only in the blocks relative to variables $\SState_i$ and $\SState_j\,$, in formul\ae:
 
-\begin{equation*}
+\begin{equation}
     \jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_i \,\: \zero \: \cdots \: \zero \:\, \jacob_j \,\: \zero \: \cdot \: \zero\right]
-\end{equation*}
+    \label{eq:jac_se2}
+\end{equation}
 
 The reader might notice that the equation \ref{eq:error_perturbation_se2} is highly non-linear - as also the operators $\text{t2v}$ and $\v2t$ themselves - and this will translate into a less accurate approximation obtained from the first-order Taylor expansion of the error \ref{eq:error_se2} and into the computation complex derivatives given by \ref{eq:jac_i_se2} and \ref{eq:jac_j_se2}. The situation becomes even worse in a 3D environment, which will be better analyzed in the next Chapters. 
 
 \section{Pose-Landmarks Graphs}\label{sec:pose_land_graph}
-In this Section we will propose another common formulation of the problem. Landmarks represent the position of salient world points and here are used to optimize the trajectory of the robot, assuming that the position of those //TODO
+In this Section we will propose another common formulation of the problem. Landmarks represent the position of salient world points and here are used to optimize the trajectory of the robot, assuming that the position of those points is known in the environment. 
+
+Taking in consideration again the 2D problem for simplicity, the true position of those points in the world will be given by $\p = (p_x\: p_y)^T$. The measurements $\meas_k$ are the position of those point in the robot reference frame - namely $\meas_k = (z_x\:z_y)^T$. It is good to notice that while the state still belongs to $SE(2)$, the measurements now are Euclidean. Both the minimal and extended parametrization of the state can be taken from the previous formulation - so they will be a $3$ vector $\state = (t_x t_y \theta)$ and a 2D isometry $\SState =\: \T{W}{R}$ respectively. Also the operators $\boxplus$ and $\boxminus$ remain unchanged. The 2D isometry $\SState_i$ is composed by a rotational part $\rot_{\theta}$ and a translational one $\trans$, in formul\ae:
+
+\begin{align}
+    \SState = 
+        \begin{bmatrix}
+            \rot_{\theta} & \trans \\
+            \zero & 1
+        \end{bmatrix} 
+    \qquad
+    \rot_{\theta} = 
+        \begin{bmatrix}
+            \cos(\theta) & -\sin(\theta) \\
+            \sin(\theta) & \cos(\theta)
+        \end{bmatrix}
+    \qquad
+    \trans = 
+        \begin{pmatrix}
+            t_x \\
+            t_y
+        \end{pmatrix}
+    \label{eq:2d_isometry}
+\end{align}
+
+Given those considerations, it is possible to define the new \textit{prediction} of the measurement:
+
+\begin{align}
+    \pred_{ij} = h_{ij}(\SState) &= \SState_i^{-1}\,\p_j \nonumber \\
+    &= \rot_{\theta}^T\,\p_j - \rot_{\theta}^T\trans
+    \label{eq:prediction_r2_temp}
+\end{align}
+
+Since the measurements are Euclidean - i.e. they lie in $\mathbb{R}^2$ - the error is just the standard subtraction between prediction and measurement, namely $\error_{ij}(\SState) = \pred_{ij} - \meas_j$. Applying a state perturbation to the error we obtain:
+
+\begin{equation}
+    \label{eq:error_perturbation_r2_temp}
+    \error_{ij}(\SState \boxplus \dx) = \left(\SState_i\,\v2t(\dx_i)\right)^{-1}\p_j - \meas_j
+\end{equation}
+
+\noindent To facilitate the computation of the derivatives, it is possible to define the \textit{box-plus} operator as the pre-multiplication of $\v2t(\dx)$ to the state isometry, namely $\SState \boxplus \dx = \v2t(\dx)\,\SState$. Moreover, instead of considering the state as $\SState = \,\T{W}{R}$ - i.e. the transformation from world to robot expressed in the world reference frame - it is more advisable to use its inverse. Therefore, the state now is $\SState = \,\T{R}{W} = \,\T{W}{R}^{-1}$ - i.e. the transformation \textit{from robot to world} expressed in the robot reference frame. Introducing this notation together with the new \textit{box-plus} operator, equations \ref{eq:prediction_r2_temp} and \ref{eq:error_perturbation_r2_temp} become:
+
+\begin{align}
+    \label{eq:prediction_r2}
+    \pred_{ij} = h_{ij}(\SState) &= \SState_i \, \p_j = \rot_{\theta} \p_j + \trans \\
+    \label{eq:error_perturbation_r2}
+    \error_{ij}(\SState \boxplus \dx) &= \v2t(\dx) \underbracket{\SState_i\, \p_j}_{\tp_j} - \meas_j
+\end{align}
+
+\noindent The Jacobian is now more straightforward and it is computed as follows:
+
+\begin{align}
+    \jacob_i &= \frac{\partial \error_{ij}(\SState \boxplus \dx)}{\partial \dx} \Bigg \rvert_{\dx = 0} = \nonumber \\
+    &= \frac{\partial\begin{pmatrix}
+            \tilde{p}_x\cos(\Delta\theta) - \tilde{p}_y\sin(\Delta\theta) + \Delta t_x \\
+            \tilde{p}_x\sin(\Delta\theta) + \tilde{p}_y\cos(\Delta\theta) + \Delta t_y
+        \end{pmatrix}}{\partial\dx} \Bigg \rvert_{\dx = 0} = \nonumber \\
+    &= \begin{bmatrix}
+            I_{2 \times 2} & \begin{matrix} -\tilde{p}_y \\ \tilde{p}_x\end{matrix}
+    \end{bmatrix}
+    \label{eq:jacobian_r2}
+\end{align}
+
+Now that we defined every aspect of the problem, it is possible to embed everything in the already seen Least-Squares algorithm to find the optimal state.
+
+\section{Bundle Adjustment}\label{sec:bundle_adjustment_problem}
+This problem instantiation is more complex with respect what has been proposed in the previous Sections. In Section \ref{sec:pose_graphs} the constraints were only of type \textit{pose} - i.e. they lie on $SE(n)$ - while in Section \ref{sec:pose_land_graph} they were only of type \textit{point} - i.e. they lie on $\mathbb{R}^n$.
+
+Bundle Adjustment (BA) aims to estimate \textit{both} the robot trajectory \textbf{and} the world position of the landmarks, given constraints of type \textit{pose} and \textit{point}. Considering again the 2D case for simplicity, the state will be:
+
+\begin{equation}
+    \SState = \left(\overbracket{\SState^R_1, ..., \SState^R_N}^{N poses}\: |\: \overbracket{\state^L_{N+1}, ..., \state^L_{N+M}}^{M landmarks}\right)
+    \label{eq:state_ba_2d}
+\end{equation}
+
+\noindent where $\SState^R_i = \,\T{W}{R} \in SE(2)$ represents the $i$-th robot pose while $\state^L_j = \p = \left(p_x p_y\right)^T \in \mathbb{R}^2$ represents the world position of the $j$-th landmark. The set of increments $\dx$ will have the structure seen in \ref{eq:state_ba_2d}, namely:
+
+\begin{equation}
+    \dx = \left(\overbracket{\dx^R_1, ..., \dx^R_N}^{N poses}\: |\: \overbracket{\dx^L_{N+1}, ..., \dx^L_{N+M}}^{M landmarks}\right)
+    \label{eq:increments_ba_2d}
+\end{equation}
+
+\noindent where $\dx^R_i = (\Delta t_{x_i}\, \Delta t_{y_i}\, \Delta \theta_i)^T$ and $\dx^L_j = (\Delta p_{x_j}\, \Delta p_{y_j})^T$.
+
+In order to properly apply the increment, it is necessary to define a suitable operator \textit{box-plus}. In this case, for the \textit{point} increments it is possible to use the Euclidean sum, while for the \textit{pose} ones we will employ the already seen operator $\boxplus$, leading to $\SState \boxplus \dx^R = \v2t(\dx^R)\, \SState$.
+
+Clearly, depending on the types of constraint that we linearize, it leads to different contribution in the \textit{Hessian} matrix $\hessian$, so they will be analyzed separately.
+
+\subsection{Pose-Pose Constraints}\label{subsec:pose_pose_constraints_2d}
+Here, for a 2D environment, it is possible to reuse what it has been shown in Section \ref{sec:pose_graphs}. Therefore, the \textit{predicted measurement} $\Pred_{ij}$, the \textit{error} $\error_{ij}$ and the \textit{perturbed error} are computed as follows:
+
+\begin{align*}
+    \Pred_{ij} &= h_{ij}(\SState) = \SState_i^{-1}\, \SState_j \\
+    \error_{ij}(\SState) &= \text{t2v}\left(\Meas_{ij}^{-1}\,\SState_i^{-1}\, \SState_j\right) \\
+    \error_{ij}(\SState \boxplus \dx^R) &= \text{t2v}\left(\Meas_{ij}^{-1} \, \v2t(\dx^R_i)^{-1}\: \Pred_{ij} \:\v2t(\dx^R_j) \right)
+\end{align*}
+
+\noindent The complete Jacobian will be structured as in equation \ref{eq:jac_se2} and its components can be computed employing the \textit{chain-rule} for partial derivatives.
+
+\subsection{Pose-Point Constraints}\label{subsec:pose_point_constraints_2d}
+It is possible to refer to what it has been shown in Section \ref{sec:pose_land_graph} for this part. The reader might be notice that in this formulation the \textit{robot pose} is expressed in the world reference frame - i.e. $\SState =\, \T{W}{R}$ - and, thus, we must stick to this notation also for \textit{pose-point constraints}. Therefore, supposing that the measurement $\meas_{ij}$ relates the $i$-th pose with the $j$-th point - indicated with $\SState_i$ and $\state_j = \p_j$ respectively - the \textit{predicted measurement} $\pred_{ij}$, the \textit{error} $\error_{ij}$ and the \textit{perturbed error} are computed as follows:
+
+\begin{align*}
+    \pred_{ij} = h_{ij}(\SState) &= \SState_i^{-1} \, \p_j = \rot_{i}^T\,\p_j - \rot_{i}^T\trans_i \\
+    \error_{ij}(\SState) &= \pred_{ij} - \meas_j \\
+    \error_{ij}(\SState_i \boxplus \dx_i^R, \state_j + \dx_j^L) &= \left(\v2t(\dx_i^R)\SState_i\right)^{-1}\left(\p_j + \dx_j^L\right) - \meas_j
+\end{align*}
+
+In this formulation the state parameters are $\SState_i$ \textit{and} $\p_j$, the final Jacobian $\jacob$ will have the following structure:
+
+\begin{equation*}
+    \jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_P \,\: \zero \: \cdots \: \zero \:\, \jacob_L \,\: \zero \: \cdot \: \zero\right]
+\end{equation*}
+
+\noindent where 
+
+\begin{align}
+    \label{eq:jac_p_se2}
+    \jacob_P &= \frac{\partial \left[\left(\v2t(\dx_i)\SState_i\right)^{-1}\left(\p_j + \dx_j\right) - \meas_j\right]}{\partial\dx_i^R}\Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} \\
+    \label{eq:jac_l_se2}
+    \jacob_L &= \frac{\partial \left[\left(\v2t(\dx_i)\SState_i\right)^{-1}\left(\p_j + \dx_j\right) - \meas_j\right]}{\partial\dx_j^L}\Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0}
+\end{align}
+
+\noindent The reader might notice how this formulation leads to more complex derivatives with respect to the one reported in equation \ref{eq:jacobian_r2}.
+
+\vspace{10px}
+
+Once that all the needed objects are defined, it is possible to embed them in the iterative algorithm to find the optimal state configuration.
+
+\section{Simultaneous Calibration Localization and Mapping}
+\lipsum[1-2]
