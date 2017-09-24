@@ -190,4 +190,75 @@ In this formulation the state parameters are $\SState_i$ \textit{and} $\p_j$, th
 Once that all the needed objects are defined, it is possible to embed them in the iterative algorithm to find the optimal state configuration.
 
 \section{Simultaneous Calibration Localization and Mapping}
-\lipsum[1-2]
+The formulations seen in the previous Sections, they all rely on the fact that all the specific \textit{inner robot parameters are known} - i.e. the position of the sensors mounted on the robot with respect to the robot reference frame. Performing SLAM with a wrong estimation of those parameters reduces the accuracy of the system, leading to non-consistent estimations even after the optimization process.
+
+In general to acquire those information, it is possible to proceed in different ways:
+
+\begin{itemize}
+    \item Get those parameters from the robot's specifics - if they are present.
+    \item Measure those quantity \textit{manually} on the robot
+    \item Perform ad-hoc calibration \textit{before} employing the robot in a mission
+\end{itemize}
+
+\noindent All those procedures share the same drawbacks: they are not able to estimate non-stationary parameters and, if the robot is subject to hardware changes, the calibration procedure must be repeated. 
+
+A possible solution to this problem is to \textit{embed those parameters in the state} and to estimate  them together with the robot trajectory and the map. This solution has been proposed by \textit{K\"ummerle et al.} in their work \cite{kummerle2011sclam} and it leads to several benefit to the original SLAM problem. Therefore, in this Section it is proposed a brief overview of this approach.
+
+Given a generic robot in a 2D environment, we have to introduce the following quantities:
+
+\begin{itemize}
+    \item $\l = (l_x \, l_y \, \theta_l)$ the pose of a generic sensor expressed with respect to the robot reference frame.
+    \item $\u_i$ and $\Omega_i^u$ that represent respectively the \textit{motion command} and its relative information matrix.
+    \item $\k$ the parameters of the robot's \textit{forward kinematic} 
+\end{itemize}
+
+The forward kinematic function $K(\u, \k)$ converts the wheels' velocities deriving from the motion commands into the actual robot displacement from node $i$ to $i+1$. For example, taking in consideration a differential drive kinematic scheme, the motion commands might be $\u = (v_r \, v_l)^T$ - respectively the left and right wheel velocity. Those lead to the following relation to compute the relative motion obtained during a time step $\Delta t$:
+
+\begin{equation}
+    \label{eq:dd_kinematics}
+    K(\u, \k) = 
+        \begin{pmatrix}
+            \rot(\Delta t \, \omega) & \zero \\
+            \zero & 1
+        \end{pmatrix}
+        \begin{pmatrix}
+            -ICC \\ 0
+        \end{pmatrix}
+        +
+        \begin{pmatrix}
+            ICC \\ \Delta t \, \omega
+        \end{pmatrix}
+\end{equation}
+
+\noindent where 
+
+\begin{align*}
+    ICC &= 
+        \begin{pmatrix}
+            0 \\ \frac{b}{2} \frac{r_l v_l + r_r v_r}{r_l v_l - r_r v_r}
+        \end{pmatrix} \\
+    \omega &= \frac{r_l v_l - r_r v_r}{b}
+\end{align*}
+
+\noindent In this robot configuration $r_l$ and $r_r$ represent respectively the left and right wheel radii, while $b$ is the distance between the two driving wheels. Those quantities represent the forward kinematic parameters $\k = (r_r\,r_k\,b)^T$ that we embed in the estimation process.
+
+Given those objects, the optimization process has to retrieve the optimal configuration $\left[\state^\star \, \l^\star \, \k^\star\right]$ that minimizes the following negative log-likelihood function $F(\state, \l, \k)$:
+
+\begin{equation}
+    F(\state, \l, \k) = 
+        \sum_{i,j} \error_{ij}^l(\state)^T\Omega_{ij}^l\,\error_{ij}^l(\state) + 
+        \sum_{i} \error_{i}^u(\state)^T\tilde{\Omega}_{i}^l\,\error_{i}^u(\state)
+\end{equation}
+
+\noindent where $\error_{ij}^l(\state)$ describes how well the parameter blocks $\state_i$, $\state_j$ and $\l$ satisfy the constraint $\meas_{ij}$, while $\error_{i}^u(\state)$ measures the likelihood of the parameter blocks $\state_i$, $\state_j$ and $\k$ with respect to the constraint $\u_i$. The two error functions $\error_{ij}^l(\state)$ and $\error_{i}^u(\state)$ are described analytically by the following relations:
+
+\begin{align*}
+    \error_{ij}^l(\state) &= \left(\left(\state_j \boxplus \l\right) \boxminus \left(\state_i \boxplus \l\right)\right) \boxminus \meas_{ij} \\
+    \error_{ij}^l(\state) &= \left(\state_{i+1} \boxminus \state_i\right) \boxminus K(\u_i, \k)
+\end{align*}
+
+\noindent where the operators $\boxplus$ and $\boxminus$ are the same of the ones described in the previous Sections. It is good to notice that, in order to obtain consistent results, the information matrix $\Omega_{i}^u$ must be projected through the forward kinematic function $K(\u, \k)$, for example using the \textit{Unscented Transform} \cite{julier2002scaledUT}.
+
+\vspace{15px}
+
+Given the main notions about the most common formulations of the problem, in the next Chapter it will be analyzed more deeply the solution of 3D pose graphs, explaining also the main contributions brought by this work in this kind of problems.
