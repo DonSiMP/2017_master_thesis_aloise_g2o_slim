@@ -113,3 +113,24 @@ As it has been already mentioned, the main use of the Cholesky decomposition is 
 Clearly, since in the problem in analysis $\hessian$ and its factorization $\L$ are sparse block-matrices, also $\bvec$ and $\mathbf{y}$ are \textit{dense block-vector} - with the number of blocks $N$ equal to the number of vertexes in the graph.
 
 \section{Manifold Representation}\label{sec:manifold_se3}
+As it has been already stated at the begin of the Chapter, this work focuses on 3D formulations of pose-graph and bundle adjustment. In this Section it will be better analyzed the representation of all the objects required for the LS estimation in both the formulations.
+
+\subsection{3D Pose-Graph}\label{subsec:3d_pose_graphs}
+Pose-graph optimization in 3D represents the backbone of SLAM, allowing to estimate the robot trajectory \textit{in space} through MAP estimation. In this formulation, the state $\state$ includes the 3D orientation of the nodes which represent the main reason why pose-SLAM is a complex problem. Rotations in the space can be over-parametrized through a 3D rotation matrix $\rot \in SO(3)$. Therefore, the over-parametrized state can be represented by a 3D isometry $\SState = \,\T{W}{R} \in SE(3)$ which represents the robot pose in the world reference frame - i.e. a $(4 \times 4)$ homogeneous transformation matrix.
+
+A possible \textit{minimal representation} of the state can be through a $6$ vector $\state = (t_x\,t_y\,t_z\,\alpha\,\beta\,\gamma)^T$, where the triplet $\mathbf{r} = (\alpha\,\beta\,\gamma)^T$ represents the Euler Angles that compose the rotational part of the isometry, while $\trans = (t_x\,t_y\,t_z)^T$ the translational one. Summarizing, in formul\ae:
+
+\begin{equation*}
+    \SState = 
+        \begin{pmatrix}
+            \rot & \trans \\ \zero^T & 1
+        \end{pmatrix}
+    \qquad 
+    \state = \begin{bmatrix} t_x & t_y & t_z & \alpha & \beta & \gamma \end{bmatrix}^T
+\end{equation*}
+
+\noindent where
+
+\begin{equation*}
+    \rot = \rot_x(\alpha) \, \rot_y(\beta)\, \rot_z(\gamma)
+\end{equation*}
