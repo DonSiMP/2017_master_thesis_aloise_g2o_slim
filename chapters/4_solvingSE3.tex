@@ -1,4 +1,115 @@
 \chapter{Solving Factor Graphs with SE3 Variables}\label{ch:solvingSE3}
-\lipsum
 
-\lipsum
+In this project it has been mainly addressed the optimization of \textbf{3D factor graphs}. In particular it has been developed from scratch a back-end system to efficiently solve \textit{pose-graph optimization} and \textit{bundle adjustment}.
+
+The reader might feel already comfortable with the formulation of those problems, thus, in this Section will be shown more in detail the approaches used in order to achieve \textbf{real-time performances} and how $SE(3)$ constraints have been manipulated in order to \textbf{reduce problem's non-linearity}. 
+
+\section{Exploit Sparsity}\label{sec:sparsity}
+As it as been already mentioned in Chapter \ref{ch:basics}, standard optimization algorithms like \textit{Gauss-Newton} or \textit{Levenberg-Marquardt} reduce the non-linear problem to the solution of a \textit{linear system}, namely
+
+\begin{equation*}
+    \hessian \dx = -\bvec
+\end{equation*}
+
+\noindent Here, $\dx$ and $\bvec$ are dense vectors, while the \textit{Hessian}'s approximation $\hessian$ is a sparse matrix. The literature proposes a lot of methods to solve efficiently sparse linear systems. Those can be categorized in 2 main groups:
+
+\begin{enumerate}
+    \item \textbf{Iterative methods} \cite{saad2003iterativeSPsolvers} that compute a solution iteratively.
+    \item \textbf{Direct methods} \cite{davis2006directSPsolvers} that solve the system in just one step.
+\end{enumerate}
+
+\noindent The former ones like \textit{Conjugate Gradient} or \textit{Generalized Minimal Residual Method} - shortened as GMRES - exploit fast matrix-vector product to deliver good performances even if the solution is found iteratively. Those often use also \textit{preconditioning} that consist in the application of a transformation - called the preconditioner - that turns the system into a form more suitable for numerical solving methods - e.g. \textit{Preconditioned Conjugate Gradient} (PCG). The latter group, instead, exploits matrix decompositions like \textit{Cholesky} or the $QR$-decomposition to efficiently retrieve a solution in one step. Crucial for those kind of methods is the \textit{fill-in} - i.e. the increase of non-zero elements in the decomposition with respect to the source matrix. As already mentioned in Section \ref{sec:sparse_ls}, variable reordering techniques, that consists in applying a suitable permutation to the source matrix, are able to reduce dramatically the fill-in, allowing a faster decomposition. Several algorithm are proposed in the literature to compute the proper permutation - e.g. AMD, COLAMD. For the Cholesky $LU$ decomposition it is also possible to evaluate the pattern of the $L$ matrix before computing the actual decomposition, through the \textit{Symbolic Cholesky Decomposition}. 
+
+In the remaining of the Section, it will be given a more detailed description on how to solve a sparse linear system using the Cholesky decomposition of the matrix $\hessian$.
+
+\subsection{Storage Methods for Sparse Matrices}\label{subsec:sparse_storage_methods}
+Another core aspect of sparse matrices is that there are several techniques to \textit{store} them more efficiently, reducing the amount of memory needed. The most general ones are \textit{Compressed Row Storage} (CRS) or \textit{Compressed Column Storage} (CCS), since they do not make any assumption on the structure of the matrix but the do not store unnecessary elements - i.e. the zeros. Those method store the matrix using only 3 vectors: one vector for floating point numbers that represent the non-zero entries and two for the column and row indexes respectively. As an example, given a matrix $A$
+
+\begin{equation*}
+    A = 
+        \begin{pmatrix}
+            10 & 0 & 0 & 0 & -2 & 0 \\
+            3 & 9 & 0 & 0 & 0 & 3 \\
+            0 & 7 & 8 & 7 & 0 & 0 \\
+            3 & 0 & 8 & 7 & 5 & 0 \\
+            0 & 8 & 0 & 9 & 9 & 13 \\
+            0 & 4 & 0 & 0 & 2 & -1 
+        \end{pmatrix}
+\end{equation*}
+
+\noindent in CRS format is represented by the following vectors - using zero-based indexing:
+
+\begin{align*}
+    val &= \begin{bmatrix}10 & -2 & 3 & 9 & 3 & 7 & \cdots & 2 & -1\end{bmatrix} \\
+    col &= \begin{bmatrix}0 & 4 & 0 & 1 & 5 & 1 & \cdots & 4 & 5\end{bmatrix} \\
+    row &= \begin{bmatrix}0 & 2 & 5 & 8 & 12 & 16 & 19\end{bmatrix}     
+\end{align*}
+
+\noindent \textit{List of Lists} (LIL) represents another effective and easy to implement storage method is the. In this case, each row-vector is represented as a list of pairs that denotes the column index and the element's value.
+
+Recalling equation \ref{eq:sparse_hessian_structure}, since in this problem it has been considered only \textit{binary constraints}, the linearization of each edge generates $4$ block-contributions to the Hessian, namely:
+
+\begin{align*}
+    \hessian_{ii} &= \jacob_i^T \Omega_k \, \jacob_i \qquad
+    \hessian_{jj} = \jacob_j^T \Omega_k \, \jacob_j \\
+    \hessian_{ij} &= \jacob_i^T \Omega_k \, \jacob_j \qquad
+    \hessian_{ji} = \jacob_j^T \Omega_k \, \jacob_i 
+\end{align*}
+
+\noindent Therefore, the Hessian can be intended to be a \textit{sparse block-matrix} where each entry is a matrix itself of a given size. In our work, it has been chosen to employ the LIL storage method with block-entries, in order to speed-up the numerical computations - better explained in the next Chapter.
+
+\subsection{Cholesky Decomposition}\label{subsec:cholesky_dec_general}
+In linear algebra, the Cholesky decomposition (or factorization) is the decomposition of a \textit{Hermitian}, positive semi-definite (PSD) matrix into the product of a \textit{lower triangular matrix} and its \textit{conjugate transpose}, namely
+
+\begin{empheq}[box={\mybluebox[1pt]}]{equation}
+    \label{eq:generic_cholesky}
+    \mathbf{A} = \L\,\L^\star
+\end{empheq}
+
+\noindent In this particular problem formulation, the matrices involved are real, therefore the conjugate transpose of $\L$ is simply its transposed $\L^T = \U$. 
+
+A more stable variant of the classical Cholesky decomposition is the \textbf{LDL} decomposition. In this case, the original matrix is decomposed into the following product:
+
+\begin{equation}
+    \label{eq:ldl_decomposition}
+    \mathbf{A} = \L \mathbf{D} \L^\star
+\end{equation}
+
+\noindent where $\L$ is a lower \textit{unit} triangular matrix - i.e. all the entries on the main diagonal are $1$ - and $\mathbf{D}$ a diagonal matrix. This variant requires the same space and computational effort with respect to the original one but avoids the square-roots extraction. In this way, even matrices that do not have a Cholesky decomposition can be factorized with the \textit{LDL} one. However, in this work, since the matrix is symmetric and PSD by construction, it has been chose the original Cholesky decomposition.
+
+In general the computational complexity for the factorization of a $(n \times n)$ matrix is $O(n^3)$, requiring about $\nicefrac{n^3}{3}$ FLOPs. There are several algorithm available to compute the factorization, however, one of the most common is the \textit{Cholesky-Banachiewicz}. In this algorithm the computation starts from the top-left corner of the matrix $\L$ and proceeds the computation row-by-row as follows:
+
+\begin{equation*}
+    \mathbf{A} = \L \L^T = 
+        \begin{pmatrix}
+            L_{00} & 0 & 0 \\ L_{10} & L_{11} & 0 \\ L_{20} & L_{12} & L_{22} 
+        \end{pmatrix}
+        \,
+        \begin{pmatrix}
+            L_{00} & L_{10} & L_{20} & \\ 0 & L_{11} & L_{21} \\ 0 & 0 & L_{22}
+        \end{pmatrix}
+\end{equation*}
+
+\noindent where
+
+\begin{empheq}[box={\mybluebox[3pt]}]{equation}
+    \label{eq:cholesky_banachiewicz}
+    \begin{cases}
+        L_{jj} = \sqrt{A_{jj} - \sum_{k = 1}^{j-1}L_{j k}^2} \\
+        L_{ij} = \frac{1}{L_{jj}}\left[A_{ij} - \sum_{k = 1}^{j-1}L_{ik}\,L_{jk}\right] \qquad\quad \text{for}\quad i>j
+    \end{cases}
+\end{empheq}
+
+This algorithm and also the \textit{Cholesky-Crout}'s one - that proceeds column-by-column instead - allow to perform the computation also \textit{in-place}. Moreover, both algorithms can be employed in sparse block-matrices, leading to a block-Cholesky factorization. The blocks are also computed as in Equation \ref{eq:cholesky_banachiewicz} but, in the block case, the \textit{square root} operator is applied to the matrix-block and it consists in the \textit{Cholesky decomposition of the block} itself.
+
+As it has been already mentioned, the main use of the Cholesky decomposition is in the solution of linear systems. Given a symmetric PSD real matrix $\mathbf{A}$, the solution of the linear system $\mathbf{A}\,\state = \bvec$ is computed through the following steps:
+
+\begin{enumerate}
+    \item \textbf{Cholesky factorization} of source matrix $\mathbf{A} = \L \L^T$
+    \item \textbf{Forward substitution} to solve the linear system $\L \, \mathbf{y} = \bvec$
+    \item \textbf{Backward substitution} to solve the linear system $\L^T\, \state = \mathbf{y}$
+\end{enumerate}
+
+Clearly, since in the problem in analysis $\hessian$ and its factorization $\L$ are sparse block-matrices, also $\bvec$ and $\mathbf{y}$ are \textit{dense block-vector} - with the number of blocks $N$ equal to the number of vertexes in the graph.
+
+\section{Manifold Representation}\label{sec:manifold_se3}
