@@ -229,20 +229,40 @@ Finally, it is necessary to compute the Jacobian $\jacob$ deriving from the cons
 
 \noindent where
 
-\begin{align}
-    \label{eq:jacobian_r_se3r3}
-    \jacob_R &= \frac{\partial\,\S^{-1} \left[\left(\v2t(\dx_i^R)\SState_i\right)^{-1}\left(\p_j + \dx_j^L\right) - \meas_j\right]}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
-    &= \frac{\partial\: \left[\rot_{S}^T\left[\v2t(\dx_i^R) \SState_i\right]^{-1} \, \p_j - \rot_{S}^T\trans_S\right]}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
-    &= \frac{\partial\, \rot_{S}^T \SState_i^{-1} \left[\v2t(\dx_i^R)\right]^{-1} \, \p_j}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \\
-    &= \frac{\partial\, \left[\rot_{S}^T\, \rot_{R}^T\, \left[\v2t(\dx_i^R)\right]^{-1} \, \p_j - \rot_{R}^T\,\trans_R\right]}{\partial\dx_i^R}\Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
-    &= \frac{\partial\, \rot_{S}^T \, \rot_{R}^T \left(\left[\v2t(\dx_i^R)\right]^{-1} \, \p_j\right)}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
-    &= \rot_{S}^T \, \rot_{R}^T \frac{\partial\, \left[\rot_{\dx_i^R} \,\p_j - \rot_{\dx_i^R} \,\trans_{\dx_i^R}\right]}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} 
-    \label{eq:temp_jac_r_se3r3}
-\end{align}
+\begin{align*}
+    \jacob_R &= \frac{\partial\,\S^{-1} \left[\left(\v2t(\dx_i^R)\SState_i\right)^{-1}\left(\p_j + \dx_j^L\right) - \meas_j\right]}{\partial\dx_i^R} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} = \\
+    &= \frac{\partial\: \left[\rot_{S}^T\left[\v2t(\dx_i^R) \SState_i\right]^{-1} \, \p_j - \rot_{S}^T\trans_S\right]}{\partial\dx_i^R} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} = \\
+    &= \frac{\partial\, \rot_{S}^T \SState_i^{-1} \left[\v2t(\dx_i^R)\right]^{-1} \, \p_j}{\partial\dx_i^R} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} = \\
+    &= \frac{\partial\, \left[\rot_{S}^T\, \rot_{R}^T\, \left[\v2t(\dx_i^R)\right]^{-1} \, \p_j - \rot_{R}^T\,\trans_R\right]}{\partial\dx_i^R}\Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} = \\
+    &= \frac{\partial\, \rot_{S}^T \, \rot_{R}^T \left(\left[\v2t(\dx_i^R)\right]^{-1} \, \p_j\right)}{\partial\dx_i^R} \Bigg \rvert_{\tiny\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} =
+    \rot_{S}^T \, \rot_{R}^T \frac{\partial\, \left[\rot_{\dx_i^R} \,\p_j - \rot_{\dx_i^R} \,\trans_{\dx_i^R}\right]}{\partial\dx_i^R} \Bigg \rvert_{\tiny\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} 
+\end{align*}
 
-\noindent Exploiting the fact that the derivative expressed in Equation \ref{eq:temp_jac_r_se3r3} is evaluated in $\dx_i^R = 0$, it becomes:
+\noindent Exploiting the fact that the derivative expressed in the previous equation is evaluated in $\dx_i^R = 0$, it leads to the following relation:
 
 \begin{empheq}[box={\mybluebox[0pt]}]{equation}
     \label{eq:jac_r_se3r3}
     \jacob_R = \rot_{S}^T \: \rot_{R}^T \: \begin{bmatrix} -I_{3\times3} & | & -{\left[\p_j\right]}_\times\end{bmatrix}
 \end{empheq}
+
+\noindent The other component of $\jacob$ - namely $\jacob_L$ - instead can be computed as follows:
+
+\begin{align*}
+    \jacob_L &= \frac{\partial\,\S^{-1} \left[\left(\v2t(\dx_i^R)\SState_i\right)^{-1}\left(\p_j + \dx_j^L\right) - \meas_j\right]}{\partial\dx_j^L} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} = \\
+    &= \frac{\partial\,\left[\rot_{S}^T \, \SState_i^{-1}\left(\p_j + \dx_j^L\right) - \rot_{S}^T \, \trans_S\right]}{\partial\dx_j^L} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} = \\
+    &= \frac{\partial\,\left[\left(\rot_{S}^T \, \SState_i^{-1}\p_j\right) +  \left(\rot_{S}^T \, \SState_i^{-1}\dx_j^L\right)\right]}{\partial\dx_j^L} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} = 
+    \rot_{S}^T \, \frac{\partial\,\left[\rot_R^T \, \dx_j^L  - \rot_{R}^T\trans_R\right]}{\partial\dx_j^L} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i^R = 0\\\dx_j^L = 0\end{matrix}} 
+\end{align*}
+
+%\dx_i^R = 0, \dx_j^L = 0
+
+\noindent This result - expanding the derivatives and exploiting that the linearization point is $\dx_j^L = 0$ - leads to the following relation:
+
+\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+    \label{eq:jac_l_se3r3}
+    \jacob_L = \rot_{S}^T\:\rot_{R}^T
+\end{empheq}
+
+\noindent The reader might notice that $\jacob_R$ is a $(3 \times 6)$ matrix - since the minimal representation of $SE(3)$ states has $6$ components - while $\jacob_L$ is a $(3\times3)$ matrix - because $\mathbb{R}^3$ states are vectors with only $3$ components. 
+
+In the next Section it is proposed a deeper analysis on the error representation and the linearization of 3D pose constraints, highlighting the non-linearity of the computation and the proposed approach to overcome this issue.
