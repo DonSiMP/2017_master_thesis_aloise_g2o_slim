@@ -53,7 +53,7 @@ Finally, Jacobians must be computed and, to do so, we apply a perturbation to th
 \noindent The final Jacobian will be non-zero only in the blocks relative to variables $\SState_i$ and $\SState_j\,$, in formul\ae:
 
 \begin{equation}
-    \jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_i \,\: \zero \: \cdots \: \zero \:\, \jacob_j \,\: \zero \: \cdot \: \zero\right]
+    \jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_i \,\: \zero \: \cdots \: \zero \:\, \jacob_j \,\: \zero \: \cdots \: \zero\right]
     \label{eq:jac_se2}
 \end{equation}
 
@@ -171,14 +171,14 @@ It is possible to refer to what it has been shown in Section \ref{sec:pose_land_
 In this formulation the state parameters are $\SState_i$ \textit{and} $\p_j$, the final Jacobian $\jacob$ will have the following structure:
 
 \begin{equation*}
-    \jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_P \,\: \zero \: \cdots \: \zero \:\, \jacob_L \,\: \zero \: \cdot \: \zero\right]
+    \jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_R \,\: \zero \: \cdots \: \zero \:\, \jacob_L \,\: \zero \: \cdot \: \zero\right]
 \end{equation*}
 
 \noindent where 
 
 \begin{align}
     \label{eq:jac_p_se2}
-    \jacob_P &= \frac{\partial \left[\left(\v2t(\dx_i)\SState_i\right)^{-1}\left(\p_j + \dx_j\right) - \meas_j\right]}{\partial\dx_i^R}\Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} \\
+    \jacob_R &= \frac{\partial \left[\left(\v2t(\dx_i)\SState_i\right)^{-1}\left(\p_j + \dx_j\right) - \meas_j\right]}{\partial\dx_i^R}\Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} \\
     \label{eq:jac_l_se2}
     \jacob_L &= \frac{\partial \left[\left(\v2t(\dx_i)\SState_i\right)^{-1}\left(\p_j + \dx_j\right) - \meas_j\right]}{\partial\dx_j^L}\Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0}
 \end{align}

@@ -131,6 +131,118 @@ A possible \textit{minimal representation} of the state can be through a $6$ vec
 
 \noindent where
 
-\begin{equation*}
+\begin{equation}
+    \label{eq:se3_rotation}
     \rot = \rot_x(\alpha) \, \rot_y(\beta)\, \rot_z(\gamma)
+\end{equation}
+
+The measurements are also of type \textit{pose}, thus, it is possible to use the same notation that describes the state. Therefore $\Meas_{ij}$ represents the over-parametrized measurement of node $j$ with respect to node $i$ - i.e. a 3D isometry $\T{i}{j}$.
+
+The next required step concerns the definitions of suitable operators \textit{box-plus} and \textit{box-minus}. We introduce again the operators \textit{v2t} and \textit{t2v} that allow to map the over-parametrized representation into the minimal one and vice versa. Those two operators allow to define the following relations:
+
+\begin{align}
+    \label{eq:standard_boxplus_se3}
+    \SState \boxplus \dx &= \v2t(\dx) \, \SState \\
+    \label{eq:standard_boxminus_se3}
+    \SState_a \boxminus \SState_b &= \text{t2v}\left(\SState_b^{-1}\SState_a\right)
+\end{align}
+
+\noindent For $SE(3)$ object, the \textit{v2t} function computes the rotational part of $\SState$ through Equation \ref{eq:se3_rotation} and then composes the isometry adding the translational part $\trans = (t_x \: t_y \: t_z)^T$. In Equation \ref{eq:se3_rotation} the factors $\rot_x$, $\rot_y$ and $\rot_z$ represent the 3D rotation respectively around the $x$, $y$ and $z$ axis; they are defined as follows:
+
+\begin{align}
+    \label{eq:rotx_3d}
+    \rot_x(\alpha) &= 
+        \begin{bmatrix}
+            1 & 0 & 0 \\ 0 & \cos\alpha & -\sin\alpha \\ 0 & \sin\alpha & \cos\alpha
+        \end{bmatrix} \\
+    \label{eq:roty_3d}
+    \rot_y(\beta) &=
+        \begin{bmatrix}
+            \cos\beta & 0 & \sin\beta \\ 0 & 1 & 0\\ -\sin\beta & 0 & \cos\beta
+        \end{bmatrix} \\
+    \label{eq:rotz_3d}
+    \rot_z(\gamma) &= 
+        \begin{bmatrix}
+            \cos\gamma & -\sin\gamma & 0 \\ \sin\gamma & \cos\gamma & 0 \\ 0&0&1
+        \end{bmatrix} 
+\end{align}
+
+Instead, to retrieve the Euler given the rotation matrix $\rot$ - that is done in the \textit{t2v} operator - it is necessary to equate each element in $\rot$ with its corresponding element in the matrix product $\rot_x(\alpha) \, \rot_y(\beta)\, \rot_z(\gamma)$, in formul\ae:
+
+\begin{align}
+    \label{eq:rot_composition_xyz}
+    \rot &= 
+        \begin{bmatrix}
+            R_{00} & R_{01} & R_{02} \\
+            R_{10} & R_{11} & R_{12} \\
+            R_{20} & R_{21} & R_{22} 
+        \end{bmatrix}
+     = \rot_x(\alpha) \, \rot_y(\beta)\, \rot_z(\gamma) = \\
+     &=
+        \begin{bmatrix}
+            \cos\beta\,\cos\gamma & -\cos\beta\,\sin\gamma & \sin\beta \\
+            \cos\alpha\,\sin\gamma + \sin\alpha\,\cos\gamma\,\sin\beta & \cos\alpha\,\cos\gamma - \sin\alpha\,\sin\beta\,\sin\gamma & -\cos\beta\,\sin\alpha \\
+            \sin\alpha\,\sin\gamma - \cos\alpha\,\cos\gamma\,\sin\beta & \sin\alpha\,\cos\gamma + \cos\alpha\,\sin\beta\,\sin\gamma & \cos\beta\,\cos\alpha 
+        \end{bmatrix} \nonumber
+\end{align}
+
+The reader might notice the non-linearities introduced by the functions t2v and v2t. Those imply the computation of complex non-linear derivatives to retrieve the Jacobian in the linearization phase. However, this problem - and the solution proposed in this work - will be better analyzed in the next Section.
+
+\subsection{3D Bundle Adjustment}\label{subsec:3d_bundle_adj}
+In this formulation, as already explained in Section \ref{sec:bundle_adjustment_problem}, the system has to estimate both the robot trajectory and the position of salient world points - i.e. the 3D landmarks. Therefore, the system's \textit{state} and \textit{increment} are described as follows:
+
+\begin{align*}
+    \SState &= \left(\overbracket{\SState^R_1, ..., \SState^R_N}^{N poses}\: |\: \overbracket{\state^L_{N+1}, ..., \state^L_{N+M}}^{M landmarks}\right) \\
+    \dx &= \left(\overbracket{\dx^R_1, ..., \dx^R_N}^{N poses}\: |\: \overbracket{\dx^L_{N+1}, ..., \dx^L_{N+M}}^{M landmarks}\right)
+\end{align*}
+
+The formalization for $SE(3)$ nodes remains unchanged from the previous Sub-Section, therefore, it is necessary to characterize only the nodes that describe the landmarks. 
+
+Landmarks' nodes lie on $\mathbb{R}^3$, so it is not necessary to define anything else - i.e. no \textit{box-plus}/\textit{box-minus} operator needed. As a consequence of this, a measurement $\meas_{ij} \in \mathbb{R}^3$ is a simple 3 vector that describes the position of point $j$ in the $i$-th pose reference frame.
+
+However, it is necessary to consider also the fact that the sensor's reference frame and the robot's one might not coincide, but they related through the transformation $\S = \,\T{R}{S} \in SE(3)$. Given this, the \textit{predicted measurement} given the state is:
+
+\begin{equation}
+    \label{eq:prediction_se3r3}
+    \tmeas_{ij} = h_{ij}(\SState) = \underbracket{\S^{-1}\,\SState_i^{-1}}_{\mathbf{K}}\p_j = \rot_{K}\p_j + \trans_K
+\end{equation}
+
+\noindent In light of this, without loss of generality, the error between the predicted and the actual measurement is computed as follows:
+
+\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+    \label{eq:error_se3r3}
+    \error_{ij} = \tmeas_{ij} - \meas_{ij} = \S^{-1}\SState_i^{-1}\p_j - \meas_{ij}
+\end{empheq}
+
+\noindent Given Equation \ref{eq:error_se3r3}, the perturbed error will be:
+
+\begin{equation}
+    \label{eq:perturbed_error_se3r3}
+    \error_{ij}(\SState_i \boxplus \dx_i^R, \state_j + \dx_j^L) = \S^{-1}\left[\left(\v2t(\dx_i^R)\SState_i\right)^{-1}\left(\p_j+\dx_j^L\right)\right] - \meas_{ij}
+\end{equation}
+
+Finally, it is necessary to compute the Jacobian $\jacob$ deriving from the constraint $\meas_{ij}$, that is structured as follows:
+
+\begin{equation*}
+    \jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_R \,\: \zero \: \cdots \: \zero \:\, \jacob_L \,\: \zero \: \cdots \: \zero\right]
 \end{equation*}
+
+\noindent where
+
+\begin{align}
+    \label{eq:jacobian_r_se3r3}
+    \jacob_R &= \frac{\partial\,\S^{-1} \left[\left(\v2t(\dx_i^R)\SState_i\right)^{-1}\left(\p_j + \dx_j^L\right) - \meas_j\right]}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
+    &= \frac{\partial\: \left[\rot_{S}^T\left[\v2t(\dx_i^R) \SState_i\right]^{-1} \, \p_j - \rot_{S}^T\trans_S\right]}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
+    &= \frac{\partial\, \rot_{S}^T \SState_i^{-1} \left[\v2t(\dx_i^R)\right]^{-1} \, \p_j}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \\
+    &= \frac{\partial\, \left[\rot_{S}^T\, \rot_{R}^T\, \left[\v2t(\dx_i^R)\right]^{-1} \, \p_j - \rot_{R}^T\,\trans_R\right]}{\partial\dx_i^R}\Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
+    &= \frac{\partial\, \rot_{S}^T \, \rot_{R}^T \left(\left[\v2t(\dx_i^R)\right]^{-1} \, \p_j\right)}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} &= \nonumber \\
+    &= \rot_{S}^T \, \rot_{R}^T \frac{\partial\, \left[\rot_{\dx_i^R} \,\p_j - \rot_{\dx_i^R} \,\trans_{\dx_i^R}\right]}{\partial\dx_i^R} \Bigg \rvert_{\dx_i^R = 0, \dx_j^L = 0} 
+    \label{eq:temp_jac_r_se3r3}
+\end{align}
+
+\noindent Exploiting the fact that the derivative expressed in Equation \ref{eq:temp_jac_r_se3r3} is evaluated in $\dx_i^R = 0$, it becomes:
+
+\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+    \label{eq:jac_r_se3r3}
+    \jacob_R = \rot_{S}^T \: \rot_{R}^T \: \begin{bmatrix} -I_{3\times3} & | & -{\left[\p_j\right]}_\times\end{bmatrix}
+\end{empheq}
