@@ -337,7 +337,7 @@ Finally, it is possible to plug all this new elements in the modified version of
                 
                 \State $\jacob_{\meas_k} \leftarrow \frac{\partial \left((\pred_k + \dz_k) \boxminus \meas_k\right)}{\partial \dz_k} \bigg\rvert_{\dz_k = 0}$ \Comment{compute Jacobian of the $\boxminus$ w.r.t. $\dz_k$}
                 
-                \State $\tilde{\Omega}_k \leftarrow \jacob_{\meas_k}^{T}\Omega_k\jacob_{\meas_k}$ \Comment{Remap the information matrix}
+                \State $\tilde{\Omega}_k \leftarrow \left(\jacob_{\meas_k}\Omega_k\jacob_{\meas_k}^{T}\right)^{-1}$ \Comment{Remap the information matrix}
                 
                 \State $\hessian_k \leftarrow \jacob_k^T\tilde{\Omega}_k\jacob_k$ \Comment{contribution of $\meas_k$ in $\hessian$}
                 

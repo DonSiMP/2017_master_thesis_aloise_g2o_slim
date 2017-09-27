@@ -242,7 +242,7 @@ Finally, it is necessary to compute the Jacobian $\jacob$ deriving from the cons
 
 \begin{empheq}[box={\mybluebox[0pt]}]{equation}
     \label{eq:jac_r_se3r3}
-    \jacob_R = \rot_{S}^T \: \rot_{R}^T \: \begin{bmatrix} -I_{3\times3} & | & -{\left[\p_j\right]}_\times\end{bmatrix}
+    \jacob_R = \rot_{S}^T \: \rot_{R}^T \: \begin{bmatrix} -I_{3\times3} & | & -{\lfloor\p_j\rfloor}_\times\,\end{bmatrix}
 \end{empheq}
 
 \noindent The other component of $\jacob$ - namely $\jacob_L$ - instead can be computed as follows:
@@ -265,4 +265,127 @@ Finally, it is necessary to compute the Jacobian $\jacob$ deriving from the cons
 
 \noindent The reader might notice that $\jacob_R$ is a $(3 \times 6)$ matrix - since the minimal representation of $SE(3)$ states has $6$ components - while $\jacob_L$ is a $(3\times3)$ matrix - because $\mathbb{R}^3$ states are vectors with only $3$ components. 
 
+\vspace{15px}
+
 In the next Section it is proposed a deeper analysis on the error representation and the linearization of 3D pose constraints, highlighting the non-linearity of the computation and the proposed approach to overcome this issue.
+
+\section{Dealing with SE3 Objects}{\label{sec:se3_objects}}
+3D poses are complex objects to manage, due to their rotational part that introduces many an highly non-linear contribution in the linearization process. In this section it is proposed an approach that aims to reduce those non-linearities while delivering comparable performances with other state-of-the-art systems.
+
+\subsection{Chordal Distance Based Error Function}\label{subsec:chordal_dist_error}
+Recalling \ref{subsec:3d_pose_graphs}, we have defined the functions v2t and t2v that allow to map the minimal representation of the state into the redundant one and vice-versa. Through them, we defined the operators \textit{box-plus} and \textit{box-minus}, described respectively in Equations \ref{eq:standard_boxplus_se3} and \ref{eq:standard_boxminus_se3}. Sticking to this notion, the \textit{predicted measurement} $\Pred_{ij}$ of pose $j$ from pose $i$ is computed as
+
+\begin{equation}
+    \label{eq:standard_prediction_se3}
+    \Pred_{ij} = h_{ij}(\SState) = \SState_i^{-1}\SState_j
+\end{equation}
+
+\noindent that leads to the following error function:
+
+\begin{equation}
+    \label{eq:standard_error_se3}
+    \error_{ij}(\SState) = \Pred_{ij} \boxminus \Meas_{ij} = \text{t2v}\left(\Meas_{ij}^{-1}\: \SState_i^{-1} \: \SState_j\right)
+\end{equation}
+
+\noindent The error $\error_{ij}$ is a 6 vector that express the mismatch of each component of state's minimal representation. Proceeding with the error perturbation, the result will be:
+
+\begin{equation}
+    \label{eq:standard_perturbated_error_se3}
+    \error_{ij}(\SState_i \boxplus \dx_i, \SState_j \boxplus \dx_j) = \text{t2v}\left(\Meas_{ij}^{-1}\left(\v2t(\dx_i)\,\SState_i\right)^{-1} \, \left(\v2t(\dx_j)\,\SState_j\right)\right)
+\end{equation}
+
+The full Jacobian $\jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_i \,\: \zero \: \cdots \: \zero \:\, \jacob_j \,\: \zero \: \cdots \: \zero\right]$  will be quite complex to compute due to the derivative of the t2v and v2t functions, requiring also many FLOPs to be computed and, thus, slowing the optimization process. In this formulation $\jacob_i$ and $\jacob_j$ are $(6\times6)$ matrices.
+
+It is possible to approach this problem using a different error formulation that leads to easy-to-compute derivatives. In order to do so, we define the $L_{p,q}$ norm of a $(m\times n)$ matrix $A$ as follows:
+
+\begin{equation*}
+    \norm{A}_{p,q} = \left(\sum_{j=1}^{n} \left(\sum_{i=1}^{m} |a_{ij}|^p \right)^{\nicefrac{q}{p}}\right)^{\nicefrac{1}{q}}
+\end{equation*}
+
+\noindent For $p = q = 2$ the becomes
+
+\begin{empheq}[box={\mybluebox[2pt]}]{equation}
+    \label{eq:frobenius_norm}
+    \norm{A}_F = \left( \sum_{j=1}^{n} \left(\sum_{i=1}^{m}|a_{ij}|^2 \right)^{\nicefrac{2}{2}}\right)^{\nicefrac{1}{2}} = \sqrt{\sum_{i=1}^{m}\:\sum_{j=1}^{n}|a_{ij}|^2}
+\end{empheq}
+
+\noindent that represents the \textit{Frobenius norm} of a matrix, an \textit{entrywise} norm, which is also \textit{invariant under rotation} constraint. Based on this concept, it is possible to define the \textit{chordal distance} between two rotation matrix $\rot_{A}$ and $\rot_{B}$ as follows:
+
+\begin{equation}
+    \label{eq:chordal_distance_true}
+    d_{\text{chord}}(\rot_{A}, \rot_{B}) = \norm{\rot_{A} - \rot_{B}}_F
+\end{equation}
+
+\noindent It is good to notice that the difference operator employed in Equation \ref{eq:chordal_distance_true} is the standard Euclidean \textit{minus}, executed element-wise.
+
+We define also a new function, that given a 3D isometry returns a 12 vector made with its components, namely:
+
+\begin{align}
+    \SState &= 
+        \begin{bmatrix}
+            \rot & \trans \\ \zero & 1
+        \end{bmatrix} \nonumber \\
+    \rot &= \begin{pmatrix} \mathbf{r}_1 | \mathbf{r}_2 | \mathbf{r}_3 \end{pmatrix} \nonumber \\
+    \text{flatten}(\SState) &= \begin{pmatrix} \mathbf{r}_1 \\ \mathbf{r}_2 \\ \mathbf{r}_3 \\ \trans \end{pmatrix}
+    \label{eq:flatten_isometry_operator}
+\end{align}
+
+\noindent where $\mathbf{r}_k$ represents the $k$-th column of $\rot$.
+
+Finally, we introduce the following relations to express operators \textit{box-plus} and \textit{box-minus}:
+
+\begin{align}
+    \label{eq:boxplus_se3}
+    \SState \boxplus \dx &= \v2t(\dx)\, \SState \\
+    \label{eq:boximus_se3}
+    \SState_a \boxminus \SState_b &= \flatten{\SState_a} - \flatten{\SState_b}
+\end{align}
+
+Given those mathematical concepts, it is possible to define the error between two $SE(3)$ objects through a relaxed version of the chordal distance, that leads to the following relations:
+
+\begin{align}
+    \label{eq:prediction_se3}
+    \Pred_{ij} = h_{ij}(\SState) &= \flatten{\SState_i^{-1}\,\SState_j} \\
+    \label{eq:error_se3}
+    \error_{ij}(\SState) = \Pred_{ij} - \Meas_{ij} &= \flatten{\SState_i^{-1}\, \SState_j} - \flatten{\Meas_{ij}}
+\end{align}
+
+\noindent It is good to notice that $\error_{ij}$ now is a 12 vector, therefore, the Jacobian's components $\jacob_i$ and $\jacob_j$ will be $(12\times6)$ matrices. Speaking of this, applying the state perturbation to the error will lead to the following relation:
+
+\begin{equation}
+    \label{eq:perturbed_error_se3}
+    \error_{ij}(\SState_i \boxplus \dx_i, \SState_j \boxplus \dx_j) = \flatten{\left(\v2t(\dx_i)\SState_i\right)^{-1}\,\left(\v2t(\dx_j)\SState_j\right)} - \flatten{\Meas_{ij}}
+\end{equation}
+
+\noindent It is already possible to notice the reduced complexity of the derivatives required to linearize the constraint. In fact, from Equation \ref{eq:perturbed_error_se3} it is possible to retrieve the following relations - stating that $\rot_{\dx_i} = \rot_{\dx_i}^x \, \rot_{\dx_i}^y \, \rot_{\dx_i}^z$:
+
+\begin{align*}
+    \jacob_j &= \frac{\partial\: \error_{ij}(\SState_i \boxplus \dx_i, \SState_j \boxplus \dx_j)}{\partial \dx_j} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i = 0\\\dx_j = 0\end{matrix}} = \\
+    &= \frac{\partial \left[\flatten{\overbracket{\begin{bmatrix}\rot_i^T & -\rot_i^T \trans_i \\\zero & 1\end{bmatrix} \begin{bmatrix}\left(\rot_{\dx_i}^x \, \rot_{\dx_i}^y \, \rot_{\dx_i}^z\right)^T & -\rot_{\dx_i}^T \trans_i \\\zero & 1\end{bmatrix} \begin{bmatrix}\rot_j & \trans_j \\\zero & 1\end{bmatrix}}^{\mathbf{G}}}\right]}{\partial \dx_j} \Bigg \rvert_{\scriptsize\begin{matrix} \dx_i = 0\\\dx_j = 0\end{matrix}} 
+\end{align*}
+
+\noindent Expanding the derivatives, it is possible to define the following - intuitively retrieved - objects:
+
+\begin{itemize}
+    \item  $\rot_{x0}^{\prime}$, $\rot_{y0}^{\prime}$ and $\rot_{z0}^{\prime}$ that represent derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the base rotation $\rot_k(\cdot)$, evaluated in 0 and with $k = \{x,y,z\}$.
+    \item  $\hat{\rot}_{x0}^{\prime}$, $\hat{\rot}_{y0}^{\prime}$, and $\hat{\rot}_{z0}^{\prime}$ that are the derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the rotational part of matrix $\mathbf{G}$, computed as $\hat{\rot}_{k0}^{\prime} = \rot_{i}^T \, \rot_{k0}^{\prime} \, \rot_j$ with $k = \{x,y,z\}$
+    \item $\hat{\mathbf{r}}_{k0}^{\prime}$ which describes the 9 vector obtained stacking the columns of $\hat{\rot}_{k0}^{\prime}$ - with $k = \{x,y,z\}$
+\end{itemize}
+
+\noindent In the light of what we just stated, it is possible to retrieve this final formulation of $\jacob_j$:
+
+\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+    \label{eq:jac_j_se3} 
+    \jacob_j = 
+        \begin{pmatrix}
+            \zero_{(9\times3)} & \begin{bmatrix} \hat{\mathbf{r}}_{x0}^{\prime} & | & \hat{\mathbf{r}}_{y0}^{\prime} & | & \hat{\mathbf{r}}_{z0}^{\prime} \end{bmatrix}_{(9\times3)} \\
+            \rot_{i}^T & -\rot_{i}^T \, \skew{\trans_j}
+        \end{pmatrix}
+\end{empheq}
+
+\noindent Intuitively, the other component of the Jacobian will be simply $\jacob_i = -\jacob_j$. 
+
+The reader might noticed how the new error function reduced the computational cost of the derivatives, due to the elimination of the highly non-linear function t2v. Moreover, the use of standard Euclidean \textit{minus} operator to express differences between transforms, leads to a better approximation by the first-order Taylor expansion of the perturbed error. This better approximation, translates into a wider converge basin of the optimization process and into an improved the avoidance of local minima.
+
+\subsection{Benefits in the Re-linearization}\label{subsec:benefits}
+\lipsum[1-2]
