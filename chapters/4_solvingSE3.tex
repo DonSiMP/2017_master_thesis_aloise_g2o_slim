@@ -66,7 +66,7 @@ In linear algebra, the Cholesky decomposition (or factorization) is the decompos
     \mathbf{A} = \L\,\L^\star
 \end{empheq}
 
-\noindent In this particular problem formulation, the matrices involved are real, therefore the conjugate transpose of $\L$ is simply its transposed $\L^T = \U$. 
+\noindent In this particular problem formulation, the matrices involved are real, therefore the conjugate transpose of $\L$ is simply its transposed $\L^T = \U$. In this sense, it represents the square-root operator for symmetric PSD matrices.
 
 A more stable variant of the classical Cholesky decomposition is the \textbf{LDL} decomposition. In this case, the original matrix is decomposed into the following product:
 
@@ -287,14 +287,14 @@ Recalling \ref{subsec:3d_pose_graphs}, we have defined the functions v2t and t2v
     \error_{ij}(\SState) = \Pred_{ij} \boxminus \Meas_{ij} = \text{t2v}\left(\Meas_{ij}^{-1}\: \SState_i^{-1} \: \SState_j\right)
 \end{equation}
 
-\noindent The error $\error_{ij}$ is a 6 vector that express the mismatch of each component of state's minimal representation. Proceeding with the error perturbation, the result will be:
+\noindent The error $\error_{ij}$ is a 6 vector that expresses the mismatch of each component of state's minimal representation. Proceeding with the error perturbation, the result will be:
 
 \begin{equation}
     \label{eq:standard_perturbated_error_se3}
     \error_{ij}(\SState_i \boxplus \dx_i, \SState_j \boxplus \dx_j) = \text{t2v}\left(\Meas_{ij}^{-1}\left(\v2t(\dx_i)\,\SState_i\right)^{-1} \, \left(\v2t(\dx_j)\,\SState_j\right)\right)
 \end{equation}
 
-The full Jacobian $\jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_i \,\: \zero \: \cdots \: \zero \:\, \jacob_j \,\: \zero \: \cdots \: \zero\right]$  will be quite complex to compute due to the derivative of the t2v and v2t functions, requiring also many FLOPs to be computed and, thus, slowing the optimization process. In this formulation $\jacob_i$ and $\jacob_j$ are $(6\times6)$ matrices.
+The full Jacobian $\jacob = \left[\zero \: \cdots \: \zero \:\, \jacob_i \,\: \zero \: \cdots \: \zero \:\, \jacob_j \,\: \zero \: \cdots \: \zero\right]$  will be quite complex to compute due to the derivative of the t2v and v2t functions, requiring also many FLOPs and, thus, slowing the optimization process. In this formulation $\jacob_i$ and $\jacob_j$ are $(6\times6)$ matrices.
 
 It is possible to approach this problem using a different error formulation that leads to easy-to-compute derivatives. In order to do so, we define the $L_{p,q}$ norm of a $(m\times n)$ matrix $A$ as follows:
 
@@ -388,4 +388,78 @@ Given those mathematical concepts, it is possible to define the error between tw
 The reader might noticed how the new error function reduced the computational cost of the derivatives, due to the elimination of the highly non-linear function t2v. Moreover, the use of standard Euclidean \textit{minus} operator to express differences between transforms, leads to a better approximation by the first-order Taylor expansion of the perturbed error. This better approximation, translates into a wider converge basin of the optimization process and into an improved the avoidance of local minima.
 
 \subsection{Benefits in the Re-linearization}\label{subsec:benefits}
-\lipsum[1-2]
+The reader might remember that, since also the measurements live on a non-Euclidean space, it is necessary to project the measurement information matrices through the \textit{box-minus} operator. Therefore, using the standard \textit{box-minus} described in Equation \ref{eq:standard_boxminus_se3} and given $\Pred_{ij}$ associated to $\Meas_{ij} = \Meas_{k}$, it is required to compute the following objects \textbf{at each iteration} of the LS optimization:
+
+\begin{align}
+    \label{eq:jacobian_meas_se3}
+    \jacob_{\Meas_{k}} &= \frac{\partial \left(\Pred_{ij} \boxminus \Meas\right)}{\partial \Meas} \bigg\rvert_{\Meas = \Meas_{k}} \\
+    \label{eq:std_adapted_information_matrix_se3}
+    \tilde{\Omega}_k &= \left(\jacob_{\Meas_{k}} \: \Omega_k \: \jacob_{\Meas_{k}}^T\right)^{-1}
+\end{align}
+
+The error function based on the chordal distance that it has been proposed in the previous Sub-section, brings benefits also in this sense. In fact, since the operator employed to compute the error is the standard Euclidean \textit{minus}, it is not required to recompute the information matrix $\Omega_k$ at each iteration. 
+
+It is good to notice that the information matrix associated with the measurement $\Meas_{k}$ is a $(6\times6)$ matrix $\Omega_k$ , since the state's minimal representation has dimension $6$ in this formalization. However, it is necessary to consider the contribute of function $\flatten{\cdot}$ in this process: the new error space has dimension $12$, thus it is necessary to project the information matrix into the new higher dimensional space. To this end, will now propose some new mathematical concepts useful in order to estimate the result of applying a non-linear transformation to a probability distribution function. 
+
+Given a Gaussian distribution $p(x) = \mathcal{N}(x; \mu, \Sigma)$ with mean $\mu$ and covariance $\Sigma$, it is possible to represent it through a set of weighted points called \textit{Sigma Points}. Each Sigma Point $\chi^i$ is described by a set of parameters:
+
+\begin{itemize}
+    \item a \textbf{position} $x^i$
+    \item a \textbf{weight for the mean} $w_m^i \in \mathbb{R}^+$
+    \item a \textbf{weight for the covariance} $w_c^i \in \mathbb{R}^+$
+\end{itemize}
+
+\noindent Clearly, the conversion from the original parameters $(\mu, \Sigma)$ to the Sigma Points $\chi^i = (x^i, w_m^i, w_c^i)$ must be invertible. In fact, it is possible to reconstruct the Gaussian parameters from the Sigma Points as follows:
+
+\begin{align}
+    \label{eq:sigma_to_mean}
+    \mu &= \sum_i w_m^i \: x^i \\ 
+    \label{eq:sigma_to_covariance}
+    \Sigma &= \sum_i w_c^i\:(x^i - \mu)(x^i - \mu)^T
+\end{align}
+
+It is good to notice that, if the original Gaussian distribution has dimension $n$, a suitable number of Sigma Point required to approximate without loosing information will be $N = 2n + 1$. In order to control how far the Sigma Points are sampled from the mean $\mu$ though, it is possible to tune the scalar parameters $\kappa \in \mathbb{R}^+$ and $\alpha \in (0,1]$. Therefore, the position of each Sigma Point is computed as follows:
+\begin{align}
+    \label{eq:sigma_point_pos_0}
+    x^{(0)} &= \mu \\
+    \label{eq:sigma_point_pos_i}
+    x^{(i)} &= 
+    \begin{cases}
+        \mu + [L]_i \qquad \quad \text{for} \: i \in [1 \dots n] \\
+        \mu - [L]_{n-i} \qquad \text{for} \: i \in [n+1 \dots 2n]
+    \end{cases}
+\end{align}
+
+\noindent where $L = \sqrt{(n + \lambda)\Sigma}$ and $\lambda = \alpha^2 (n + \kappa) - n$. Given the scalar parameter $\beta = 2$ - tuned for Gaussian PDFs - the weights are retrieved as follows:
+
+\begin{align}
+    \label{eq:sigma_point_wm_0}
+    w_m^{(0)} &= \frac{\lambda}{\lambda + n} \\
+    \label{eq:sigma_point_wc_0}
+    w_c^{(0)} &= w_m^{(0)} + (1 - \alpha^2 + \beta) \\
+    \label{eq:sigma_point_weights_i}
+    w_c^{(i)} = w_m^{(i)} &= \frac{1}{2(n + \lambda)}
+\end{align}
+
+This transformation between actual Gaussian parameters and the Sigma Points is called \textbf{Unscented Transform} \cite{julier2002scaledUT}. The core feature of this mathematical function is that it can be used to apply a transformation to a PDF in very straightforward way. Sticking to Gaussian PDFs, given $X_a \sim \mathcal{N}(x_a; \mu_a, \Sigma_a)$ and its Unscented Transform $x_a \sim \mathcal{UT}(x_a; x_a^{(i)}, w_m^{(i)}, w_c^{(i)})$, computing the Gaussian $X_b = g(X_a)$ can require a lot of effort. However, a good approximation of $X_b$ can be computed applying the function $g(\cdot)$ to the Unscented Transformation of $X_a$. This translates in the application of the $g(\cdot)$ function to each Sigma Point of $x_a$, namely
+
+\begin{empheq}[box={\mybluebox[3pt]}]{equation}
+    \label{eq:pdf_function_UT}
+    \chi_b^{(i)} = g\left(\chi_a^{(i)}\right) \qquad i = 1 \dots N
+\end{empheq}
+
+Going back to our problem, it is possible to transform the information matrix of each measurement $\Omega_k$ through the Unscented Transform. The required steps are the following:
+
+\begin{enumerate}
+    \item Compute the $N = 2n+1$ Sigma Points $\chi_{original}^{(i)} = (x_{original}^{(i)}, w_m^{(i)}, w_c^{(i)})$ from $\mathcal{N}(\mu_k, \Sigma_k)$, where $n$ is the minimal representation's dimension (in this case $n = 6$), $\mu_k = \text{t2v}(\Meas_{k})$ and $\Sigma_k = \Omega_k^{-1}$.
+    \item Compute the new position of $\chi_{transformed}^{(i)}$ as $x_{transformed}^{(i)} = \flatten{\v2t(x_{original}^{(i)})}$
+    \item Reconstruct the new Gaussian $\mathcal{N}(\bar{\mu}_k, \bar{\Sigma}_k)$ from the Sigma Points $\chi_{transformed}^{(i)}$, leaving the parameters $w_m^{(i)}$ and $w_c^{(i)}$ unchanged.
+\end{enumerate}
+
+The adapted information matrix $\bar{\Omega}_k = \bar{\Sigma}_k^{-1}$ is a $(12\times12)$ matrix. However, since we are mapping a 6-dimensional space in a 12-dimensional space with only $N = 2n + 1 = 13$ Sigma Points, it is possible to retrieve covariance matrix subject to (multiple) rank-loss. Therefore, it is necessary to add a non-zero scalar $\epsilon$ to the main diagonal of $\bar{\Sigma}_k$, in order to do not have numerical problems during its inversion.
+
+Thanks to the Unscented Transform it is possible to have a fast and quite accurate approximation of the adapted information matrix, leading to consistent results from the optimization process. Moreover, since the minus operator employed in this formulation is the standard Euclidean one, the computation is performed just one time for each measurement $\Meas_{k}$, reducing the computational effort of each optimization step.
+
+\vspace{15px}
+
+All those features lead to an accurate and fast optimizer, that delivers results comparable with other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice.
