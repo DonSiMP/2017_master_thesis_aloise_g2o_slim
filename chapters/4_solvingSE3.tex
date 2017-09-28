@@ -374,7 +374,7 @@ Given those mathematical concepts, it is possible to define the error between tw
 
 \noindent In the light of what we just stated, it is possible to retrieve this final formulation of $\jacob_j$:
 
-\begin{empheq}[box={\mybluebox[0pt]}]{equation}
+\begin{empheq}[box={\mybluebox[3pt]}]{equation}
     \label{eq:jac_j_se3} 
     \jacob_j = 
         \begin{pmatrix}
@@ -383,7 +383,12 @@ Given those mathematical concepts, it is possible to define the error between tw
         \end{pmatrix}
 \end{empheq}
 
-\noindent Intuitively, the other component of the Jacobian will be simply $\jacob_i = -\jacob_j$. 
+\noindent Intuitively, the other component of the Jacobian will be simply
+
+\begin{empheq}[box={\mybluebox[3pt]}]{equation}
+    \label{eq:jac_i_se3}
+    \jacob_i = -\jacob_j
+\end{empheq} 
 
 The reader might noticed how the new error function reduced the computational cost of the derivatives, due to the elimination of the highly non-linear function t2v. Moreover, the use of standard Euclidean \textit{minus} operator to express differences between transforms, leads to a better approximation by the first-order Taylor expansion of the perturbed error. This better approximation, translates into a wider converge basin of the optimization process and into an improved the avoidance of local minima.
 
