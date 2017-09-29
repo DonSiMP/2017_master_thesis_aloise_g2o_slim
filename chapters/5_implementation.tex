@@ -8,7 +8,16 @@ This Chapter will better analyze the actual implementation of a 3D Optimizer. In
 
 While the \texttt{Graph} is just a \textit{container} for nodes and edges, the optimizer has to perform several computations in order to retrieve the linear system $\hessian \dx = -\bvec$ and then solve it. Therefore, underlying the optimizer a linear solver is required to efficiently solve the aforementioned system. 
 
-It is good to notice that our system is almost completely self-contained: the only external libraries employed are \textit{Eigen} - \hyperref{http://eigen.tuxfamily.org}{}{}{site} -  to efficiently manage small matrices  and \textit{SuiteSparse}  - \hyperref{http://faculty.cse.tamu.edu/davis/suitesparse.html}{}{}{site} - only to compute the right permutation of the Hessian. Therefore, in the next Sections is proposed an insight of the main components of the \texttt{Optimizer}.
+Once that the front-end populates the graph - or it is simply loaded from file - it is fed as input of the optimizer; the general work-flow of a graph optimizer is the following:
+
+\begin{enumerate}
+    \item \textbf{Linearization}: for each edge it is computed the error with respect to the current system state and then the relative Jacobian. The output of this phase is the contribution of the edge to the Hessian matrix and the right-and-side vector.
+    \item \textbf{Permutation}: once that the Hessian $\hessian$ is built, it is necessary to compute a proper permutation to reduce Cholesky factorization's fill-in and apply it to Hessian and the right-hand-side vector.
+    \item \textbf{Linear Solver}: now it is possible to compute the actual Cholesky factorization $\L$ and retrieve $\dx$ via \textit{Forward/Backward Substitution}.
+    \item \textbf{Update}: finally, once that $\dx$ is computed, it is possible to apply it to the current system state -  i.e. to all the graph's \texttt{Vertex}.
+\end{enumerate}
+
+It is good to notice that our system is almost completely self-contained: the only external libraries employed are \textit{Eigen} - \hyperref{http://eigen.tuxfamily.org}{}{}{site} -  to efficiently manage small matrices  and \textit{SuiteSparse}  - \hyperref{http://faculty.cse.tamu.edu/davis/suitesparse.html}{}{}{site} - only to compute the right permutation of the Hessian. 
 
 \section{Graph}\label{sec:graph_implementation}
 The \texttt{Graph} is basically constituted by a collection of edges and nodes. The nodes can be either of type \textit{pose} or \textit{point} - represented respectively by the objects \texttt{VertexSE3} and \texttt{VertexR3}. Each vertex is represented by
@@ -16,6 +25,7 @@ The \texttt{Graph} is basically constituted by a collection of edges and nodes. 
 \begin{itemize}
     \item Its \textbf{estimate}, which can be a 3D isometry or a 3D position - namely a \texttt{Pose3D} or a \texttt{Point3D}
     \item A unique \textbf{index} that is used to recognize the vertex
+    \item A boolean variable that indicates whether the node is \textbf{fixed} or not. A fixed Vertex must not be involved in the optimization process. It is good to notice that at least one fixed vertex must exists in the graph, otherwise the optimization problem is undefined.
 \end{itemize}
 
 Analogously, the edge are of type \textit{pose-pose} or \textit{pose-point} - represented respectively by the objects \texttt{EdgeSE3} and \texttt{EdgeSE3\_R3}. The edge have several fields, namely:
@@ -28,10 +38,10 @@ Analogously, the edge are of type \textit{pose-pose} or \textit{pose-point} - re
 
 Once that the front-end populates the graph, it is fed into the \texttt{Optimizer} to perform MAP estimation of the best state configuration given the constraints.
 \section{The Optimizer}\label{sec:optimizer}
-The \texttt{Optimizer} represents systems' heart: it takes as input the graph, retrieves the linear system $\hessian \dx = -\bvec$, solves for $\dx$ and finally updates the graph. In the following Sub-sections the core elements of the \texttt{Optimizer} will be better investigated.
+The \texttt{Optimizer} represents systems' heart: it takes as input the graph, retrieves the linear system $\hessian \dx = -\bvec$, solves for $\dx$ and finally updates the graph. In the following Subsections the core elements of the \texttt{Optimizer} will be better investigated.
 
 \subsection{Linearization and Hessian Composition}\label{subsec:linearize}
-The main task of the \texttt{Optimizer} is to compute the contribution that each edge brings to both the Hessian matrix $\hessian$ and the right-hand-side vector $\bvec$. Those contribution are retrieved during the \textit{linearization} of the graph. 
+One of \texttt{Optimizer}'s tasks is to compute the contribution that each edge brings to both the Hessian matrix $\hessian$ and the right-hand-side vector $\bvec$. Those contribution are retrieved during the \textit{linearization} of the graph. 
 
 Each edge of the graph is analyzed, whether it is a \texttt{EdgeSE3} or a  \texttt{EdgeSE3\_R3}. For each measurement the block matrices $\hessian_{ii}$, $\hessian_{ij}$, $\hessian_{ji}$ and $\hessian_{jj}$ are computed as
 \begin{empheq}[box={\mybluebox[3pt]}]{equation}
@@ -53,3 +63,25 @@ The subscript indexes $\langle i, j \rangle$ are the node unique indexes in the 
 The Jacobians $\jacob_i$ and $\jacob_j$ are using Equations \ref{eq:jac_i_se3} and \ref{eq:jac_j_se3} for pose constraints, while for point ones Equations \ref{eq:jac_r_se3r3} and \ref{eq:jac_l_se3r3}. Clearly, as reported in Section \ref{sec:se3_objects}, the information matrix of each \texttt{EdgeSE3} is adapted through the Unscented Transform before starting the optimization process - and \textit{not} at each iteration.
 
 \subsection{Sparse Linear Solver}\label{subsec:sparse_linear_solver}
+The linear solver employed is based on Cholesky decomposition of the Hessian - i.e. Subsection \ref{subsec:cholesky_dec_general}. Clearly, the first thing needed in order to efficiently solve a sparse linear system is a proper matrix data-structure.
+
+In this work, sparse matrices are represented through the \texttt{SparseBlockMatrix} object, which uses as storage method the \textit{List of Lists} (LIL) approach. It is possible to select between \textit{fixed-size} blocks - i.e. in pose graph optimization - and \textit{dynamic} blocks - i.e. in bundle adjustment. In the former case it is possible to take advantage of CPU cache while doing matrix operations and, thus, boosting the computation; using dynamic blocks matrix operations are slower but it adds flexibility to the system. \texttt{SparseBlockMatrix} main feature is the fact that object's memory - used to actually \textit{store} the blocks - can be isolated from the objects itself. Therefore, the actual matrix is just a \textit{view} of those blocks, intended as a LIL of pointers to those memory blocks. This formulation allows to manipulate the \texttt{SparseBlockMatrix} \textbf{without touching the memory}, just rearranging matrix's \textit{view}. On the basis of this is designed the object \texttt{DenseBlockVector} used to store dense vectors like the right-hand-side vector $\bvec$ and the update vector $\dx$.
+
+Before computing the Cholesky factorization, Hessian's non-zero pattern is analyzed through the SuiteSparse library in order to retrieve a suitable ordering that reduces Cholesky's fill-in. The user can choose between different algorithms - i.e. AMD, COLAMD, CHOLMOD - or let the system retrieve the best one.
+
+Once the permutation is found, \texttt{SparseBlockMatrix}'s view of matrix $\hessian$ is rearranged based on the permutation, together with the \texttt{DenseBlockVector} $\bvec$. Now it is possible to compute the Cholesky factorization and retrieve the matrices $\L$ and $\L^T$. Finally, through Forward-Backward Substitution, the update vector $\dx$ is found.
+
+It is good to notice that before solving the linear system, it is necessary to remove fixed vertexes' contribution from the system. Supposing that node $f$ is fixed, then it is necessary to remove the $f$-th row and column from the Hessian, together with the $f$-th block of the $\bvec$. Therefore the system we solve has dimension $n - F$, where $F$ represents the number of fixed vertexes.
+
+\subsection{Graph Update}\label{subsec:update}
+Once that the \texttt{DenseBlockVector} $\dx$ is computed, it is necessary to apply to each node $k$ the relative block $\dx_k$ of the update vector.
+
+The update is applied node by node through the \textit{box-plus} operator described in Equations \ref{eq:boxplus_se3} for $SE(3)$ nodes and the Euclidean minus for $\mathbb{R}^3$ ones. Clearly, fixed nodes will remain unchanged. 
+
+\section{Bottlenecks}\label{sec:bottlenecks}
+The system has been designed to deliver real-time performances, therefore, an ad-hoc implementation is required to achieve such result. The system described in the previous Section has two main time-consuming operations, both performed at each iteration:
+
+\begin{enumerate}
+    \item Allocation and management of the memory for the Hessian's blocks
+    \item The actual computation of the Hessian's blocks described in Equation \ref{eq:j_omega_j}
+\end{enumerate}
