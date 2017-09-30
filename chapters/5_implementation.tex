@@ -17,7 +17,7 @@ Once that the front-end populates the graph - or it is simply loaded from file -
     \item \textbf{Update}: finally, once that $\dx$ is computed, it is possible to apply it to the current system state -  i.e. to all the graph's \texttt{Vertex}.
 \end{enumerate}
 
-It is good to notice that our system is almost completely self-contained: the only external libraries employed are \textit{Eigen} - \hyperref{http://eigen.tuxfamily.org}{}{}{site} -  to efficiently manage small matrices  and \textit{SuiteSparse}  - \hyperref{http://faculty.cse.tamu.edu/davis/suitesparse.html}{}{}{site} - only to compute the right permutation of the Hessian. 
+It is good to notice that our system is almost completely self-contained: the only external libraries employed are \textit{Eigen} - \hyperref{http://eigen.tuxfamily.org}{}{}{site} -  to efficiently manage small matrices  and \textit{SuiteSparse}  - \hyperref{http://faculty.cse.tamu.edu/davis/suitesparse.html}{}{}{site} - only to compute the right permutation of the Hessian. Furthermore, the library has been developed with simplicity and keeping a minimalistic approach, in order to be comprehensible also by researchers that are not expert in this field. Just for comparison, the entire library has less than $6$ thousand lines of code; other state-of-the-art systems are deployed in huge libraries with thousands of lines of code - e.g. \texttt{g2o} \cite{kummerle2011g} is over $40$ thousands lines of code, \texttt{Ceres} \cite{ceres-solver} is over $90$ thousands lines of code and \texttt{gtsam} \cite{dellaert2012gtsam} over $300$ thousands lines of code.
 
 \section{Graph}\label{sec:graph_implementation}
 The \texttt{Graph} is basically constituted by a collection of edges and nodes. The nodes can be either of type \textit{pose} or \textit{point} - represented respectively by the objects \texttt{VertexSE3} and \texttt{VertexR3}. Each vertex is represented by
@@ -85,3 +85,40 @@ The system has been designed to deliver real-time performances, therefore, an ad
     \item Allocation and management of the memory for the Hessian's blocks
     \item The actual computation of the Hessian's blocks described in Equation \ref{eq:j_omega_j}
 \end{enumerate}
+
+However, the proposed system tackles both the issue, reducing the time required for each iteration to values comparable with state-of-the-art systems.
+
+\subsection{Memory management}\label{subsec:memory_management}
+Allocate the memory blocks for the Hessian $\hessian$ is a time-expensive operation. Moreover, it is required to allocate memory also for its decomposition $\L$ and $\L^T$ and for the dense vector $\bvec$, $\dx$ and $\mathbf{y}$. Moreover, copying memory - for example to create a permutation of a matrix -  is another time and resource consuming operation. 
+
+The memory copy has been addressed through the separation of matrix view and memory in the \texttt{SparseBlockMatrix} object, as mentioned before. In this way it is possible to create multiple views of a matrix that share the same physical memory, avoiding memory copy and, thus, reducing the memory consumption of the system. The same feature is found in the \texttt{DenseBlockVector} object. The physical memory is managed by a separated object called \texttt{MemoryManager}. It is in charge of allocating, delete and copy memory for matrix and vectors.
+
+However, even if we are able to avoid memory copy, it is necessary to allocate the matrices and vectors at each iteration. Once again, this process is avoided through a clever solution: once the graph is built, it is possible to exploit its structure to evaluate the non-zero pattern of the Hessian $\hessian$. The reader might notice that the non-zero pattern will remain unchanged for the entire optimization process, while the \textit{numeric values} of the block will change at each iteration. Moreover, all the \texttt{DenseBlockVector}s will have a fixed dimension equal to the number of active vertexes $n - F$. Therefore, it is possible to allocate all the memory required to store Hessian's and vectors' block \textbf{only once} before starting the optimization process.
+
+Once that we have the Hessian's non-zero pattern, it is possible to compute both the permutation and the \textit{Cholesky symbolic decomposition}, that retrieves the non-zero pattern of matrix $\L$ (and thus also $\L^T$). In this way, during the optimization steps there is \textbf{no memory allocation or copy}, speeding up the entire system.
+
+\subsection{Hessian blocks computation}\label{subsec:j_omega_j}
+Using the \textit{Eigen} library to perform matrix operations, it is possible to appreciate a bottleneck in the computation of the product $\hessian_{ij} = \jacob_i^T \Omega_k \jacob_j$ - and all the other blocks $\hessian_{ii}$, $\hessian_{jj}$ and $\hessian_{ji}$. The slowing down is particularly emphasized for $(6\times6)$ \textit{static} or \textit{dynamic} blocks.
+
+However, for \textit{pose-pose} constraints, given the product $\mathbf{A} = \jacob_i^T \Omega_k \jacob_i$, the following relations hold:
+
+\begin{align*}
+    \hessian_{ii} &= \mathbf{A} \quad\qquad
+    \hessian_{jj} = \mathbf{A} \\
+    \hessian_{ij} &= -\mathbf{A} \:\,\qquad
+    \hessian_{ji} = -\mathbf{A}
+\end{align*}
+
+\noindent In this way the computation is performed just one time, thus there is a $75\%$ boost in terms of speed. Furthermore, since $\mathbf{A}$ is a symmetric matrix, it is possible to compute just the upper triangular part and then replicate it in the lower triangular, reducing even more the computational time.
+
+\section{Performance Results}\label{sec:performance_results}
+The library developed has been tested on different synthetic datasets, and the speed performances have been evaluated in terms of \textit{seconds per iteration}. All the test have been performed on a Lenovo ThinkPad W540 laptop equipped with:
+
+\begin{itemize}
+    \item CPU: Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz
+    \item RAM: $2 \times 4$GB $+$ $2\times8$GB SODIMM DDR3 - total 22GB
+    \item Disk: SanDisk(R) Ultra II(TM) 240GB Solid State Drive
+    \item OS: Ubuntu 16.04 LTS
+\end{itemize}
+
+TODO

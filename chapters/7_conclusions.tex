@@ -1,2 +1,28 @@
 \chapter{Conclusions}\label{ch:conclusions}
-\lipsum
+In this Master's thesis, it has been reached the goal of creating from scratch a \textit{graph optimizer} able to cope with the principal 3D SLAM problems in real-time - namely \textit{pose-graph optimization} and \textit{Bundle Adjustment}.
+
+The system, as mentioned in Chapter \ref{ch:implementation}, delivers quite good performances despite its minimal and didactic approach, combining simplicity and effectiveness. It is entirely developed in C++ in less than $5500$ lines of code and employs only essential external libraries. This makes our work comprehensible also by researchers that approach to this problem for the first time and are not SLAM experts.
+
+The system performs well thanks to a novel approach to manage $SE(3)$ objects - i.e. 3D poses in the space - and an efficient C++ implementation. The former consists in a new \textbf{error function} for $SE(3)$ objects that reduces the non-linearities of the problem, reducing the computing time and facilitating system's convergence. The latter concerns a well designed memory management, letting the system perform the optimization steps with \textbf{0 memory copy}. Thanks to this, the system proposed in this work scales well also to big graphs with thousands of poses and points.
+
+\section{Applications}\label{sec:conclusion_application}
+The system can be employed both for on-line and off-line applications, for example:
+
+\begin{itemize}
+    \item Together with a front-end in a full SLAM pipeline, as mentioned in Chapter \ref{ch:cases}. In fact, thanks to its fast implementation, it can be embedded on actual mobile robots - no matter if they are on wheels, UAVs or humanoids.
+    \item As a matter of fact, many LS algorithms fail or get stuck in local minima when the initial guess is far from the the optimum. Therefore, our system can bootstrap those algorithm providing a better initial guess in order to further optimize the graph using fine-grain LS algorithms.
+    \item It can be embedded in the map itself, in order to keep always consistent the world representation.
+\end{itemize}
+
+\noindent The generality, the ability to adapt to different scenarios and the easy-to-embed provided APIs make our system a good choice in several scenarios. Clearly it is not the perfect system and, thus, in the next Section it is proposed a set of future works related to our system.
+
+\section{Future Works}\label{sec:future_works}
+The reader might know that the time available to complete a Master's thesis is limited, and this biased a lot project development. Many compromises have been made and a lot of aspects are not addressed. In this Section it is proposed an insight of what might be the future iterations of this work.
+
+\subsection{Expand the Addressed Problems}
+Until now, our system only deals with 3D pose-graph optimization or 3D bundle-adjustment. All state-of-the-art systems provide APIs to address a many of the typical problems mentioned in Chapter \ref{ch:problems}, both in 3D and 2D environments.
+
+Therefore, a good starting point might be the extension of the problem addressed by our current system to 2D scenarios. Then, once that core SLAM problems have been successfully addressed, all the other formulations could be added.
+
+\subsection{Hierarchical Approach}
+Hierarchical approaches represents the most interesting evolution of graph-based SLAM formulation. This formulation means to create different graph's \textit{views}, each of which with its own granularity.
