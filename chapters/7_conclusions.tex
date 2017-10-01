@@ -3,7 +3,7 @@ In this Master's thesis, it has been reached the goal of creating from scratch a
 
 The system, as mentioned in Chapter \ref{ch:implementation}, delivers quite good performances despite its minimal and didactic approach, combining simplicity and effectiveness. It is entirely developed in C++ in less than $5500$ lines of code and employs only essential external libraries. This makes our work comprehensible also by researchers that approach to this problem for the first time and are not SLAM experts.
 
-The system performs well thanks to a novel approach to manage $SE(3)$ objects - i.e. 3D poses in the space - and an efficient C++ implementation. The former consists in a new \textbf{error function} for $SE(3)$ objects that reduces the non-linearities of the problem, reducing the computing time and facilitating system's convergence. The latter concerns a well designed memory management, letting the system perform the optimization steps with \textbf{0 memory copy}. Thanks to this, the system proposed in this work scales well also to big graphs with thousands of poses and points.
+The system performs well thanks to a novel approach to manage $SE(3)$ objects - i.e. 3D poses in the space - and an efficient C++ implementation. The former consists in a new \textbf{error function} for $SE(3)$ objects that reduces the non-linearities of the problem, reducing also the computing time and facilitating system's convergence. The latter concerns a well designed memory management, letting the system perform the optimization steps with \textbf{0 memory copy}. Thanks to this, the system proposed in this work scales well also to big graphs with thousands of poses and points.
 
 \section{Applications}\label{sec:conclusion_application}
 The system can be employed both for on-line and off-line applications, for example:
@@ -25,4 +25,6 @@ Until now, our system only deals with 3D pose-graph optimization or 3D bundle-ad
 Therefore, a good starting point might be the extension of the problem addressed by our current system to 2D scenarios. Then, once that core SLAM problems have been successfully addressed, all the other formulations could be added.
 
 \subsection{Hierarchical Approach}
-Hierarchical approaches represents the most interesting evolution of graph-based SLAM formulation. This formulation means to create different graph's \textit{views}, each of which with its own granularity.
+Hierarchical approaches represents the most interesting evolution of graph-based SLAM formulation. This formulation means to create multiple graph's \textit{views}, each of which has a different granularity: the bottom level represents the original input, while higher levels capture the structural properties of the environment in a always more compact manner. This approach is similar to what has been proposed in the work of Grisetti \textit{et al.} \cite{grisetti2010hogman}.
+
+This hierarchical formulation of the problem allows to update only the coarse structure of the scene during online mapping - i.e. only the highest level. When a substantial change happens in the top level, the update is propagated through the other lower levels, reducing the computational effort while providing an accurate estimate.
