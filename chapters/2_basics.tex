@@ -417,7 +417,14 @@ Hessian's sparsity is fundamental to perform efficient and fast optimization, es
 
 The literature proposes a lot of theory on how to retrieve the good ordering to reduce the fill-in, minimize the \textit{flops} or to exploit parallel computation. Some of the most effective orderings to reduce the fill-in are computed by \textit{Minimum Degree} \cite{amestoy1996amd, davis2004colamd}, \textit{super-nodal} \cite{cleveland1987supernodal} and \textit{nested dissection based} algorithms \cite{karypis1998metis}. It is good to notice that this is an \textit{NP-hard} problem and several libraries have been developed to compute orderings in a fast and efficient way \cite{agarwal2012variable}.
 
-\section{Factor Graph}\label{sec:factor_graph}
+\begin{figure}[!hbt]
+    \centering
+    \includegraphics[width=\textwidth]{figures/02_basics/factor_graph.pdf}
+    \caption{\textbf{Generic Factor Graph.} The figure depicts the structure of factor graph. The nodes are illustrated with colored squares and they can represent either a \textit{pose} - in blue - or a \textit{salient world point} - in orange. Measurements coming from the sensors are the constraints that connect the nodes, illustrated with circles - red for pose constraints and black for point ones.} 
+    \label{fig:factor_graph}
+\end{figure}
+
+\section{Factor Graphs}\label{sec:factor_graph}
 Until now, it has been showed the methodology to solve a least-squares minimization problem whose cost function is given by \ref{eq:cost_function}. In the previous Section, it has been underlined the \textit{sparsity} of the problem. In particular it has been stated that, given the state $\state = \left(\state_1, ..., \state_N\right)$, the measurement $\meas_k$ represents a \textbf{constraint} relating only a subset of the whole state vector, namely $\state_k = \left(\state_{k_1}, ..., \state_{k_q}\right) \subseteq \state = \left(\state_1, ..., \state_N\right)$. In this sense, the error $\error_k(\pred_k, \meas_k)$ describes how well the parameter blocks in $\state_k$ satisfy the constraint $\meas_k$ and, in fact, it is $\zero$ when $\state_k$ perfectly matches the constraint.
 
 A problem that has this formulation, can be easily represented with a \textit{directed hyper-graph}, where
@@ -427,9 +434,10 @@ A problem that has this formulation, can be easily represented with a \textit{di
     \item Each constraint $\meas_k$ represents an hyper-edge that links all the nodes $\state_i \in \state_k$.
 \end{itemize}
 
-\noindent Obviously, when the hyper-edges have size $2$, the graph becomes an ordinary graph. 
+\noindent Obviously, when the hyper-edges have size $2$, the graph becomes an ordinary graph. Figure \ref{fig:factor_graph} shows the concept underlying this problem formulation.
 
 Graph-based formulations are very common for the SLAM problem, since they help the optimization process and, in fact, most of the current state-of-the-art systems are based on this formulation. In fact, exploiting the \textit{topology} of the graph it is possible to achieve better performances, both in terms of speed and accuracy of the solution.
 
 \vspace{15px}
+
 Now that the underlying theory has been exploited, it is possible to better explain the typical formulations of the problem addressed in SLAM. Therefore, the next Chapter will propose an overview of the most common ones, in particular for 3D environments.

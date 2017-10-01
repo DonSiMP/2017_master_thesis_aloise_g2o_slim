@@ -54,6 +54,13 @@ This works - like it has been previously seen in $g^2o$ - also focuses on effici
 \section{HOG-Man}\label{sec:hogman}
 Grisetti \textit{et al.} in their work \cite{grisetti2010hogman} proposed an optimization system designed for accurate, fast and memory efficient on-line operations: \textit{HOG-Man} - which stands for Hierarchical Optimization on Manifolds.
 
+\begin{figure}[!hbt]
+    \centering
+    \includegraphics[width=\textwidth]{figures/01_related/hogman.png}
+    \caption{\textbf{HOG-Man.} The image - courtesy of \cite{grisetti2010hogman} - sketches the idea behind this approach: the systems creates multiple "views" of the graph's structure, each with a different level of abstraction. Proceeding from left to right it is shown the original structure - i.e. the bottom of the hierarchy - a mid level representation and the final structure - i.e. the top of the hierarchy.} 
+    \label{fig:hogman}
+\end{figure}
+
 At its core there is a \textit{hierarchical} approach to graph optimization: during on-line mapping, it optimizes only the coarse structure of the environment and not the whole map. The simplified problem that is solved, however, contains all the relevant information to let the front-end solve properly the data association problem. 
 
 It is good to notice, that there are \textit{different level of abstractions}: the bottom is the original input, while higher levels are always more compact. When the top levels are modified, only portions of the underlying ones that are subject to consistent modifications are updated. This method limits the computational power needed for on-line operations while preserving global consistency, outperforming several previous approaches.

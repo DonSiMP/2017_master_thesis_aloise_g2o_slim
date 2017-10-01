@@ -2,6 +2,26 @@
 Mobile robots, to accomplish tasks in real world more easily and in an efficient way, need to have a map of the environment and to localize themselves into the map. Furthermore, in some environment it is not possible to rely on external reference systems - e.g. GPS - and, thus, they can count only on the on-board sensors. \textit{Simultaneous Localization and Mapping} (SLAM) addresses the problem of \textbf{learning the map under pose uncertainty}.
 
 There are many scenarios in which SLAM is fundamental for the accomplishment of a task, not only in pure Robotics. SLAM, in fact, is a common problem in different domains of application. For example, in Robotics it is fundamental for indoor navigation of mobile robots - e.g. an autonomous vacuum cleaner or a service robot in a museum - or to navigate through extreme environments - e.g. underwater rescues or space exploration. Additionally, new technologies that involve different kind of agents - i.e. not robots - are now using SLAM. One of the most trending one is \textit{Augmented Reality} (AR). Always more powerful mobile devices - like smartphones or tablets - are now able to exploit SLAM to deliver stunning virtual experience. Without any doubts, this technology is going to gain always more popularity and to impact on the research in this topic.
+\vspace{5px}
+
+\begin{figure}[!hbt]
+    \centering
+    \begin{minipage}[t!]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/00_intro/roomba_cleaning.jpg}
+        \subcaption[first caption.]{}
+        \label{fig:roomba}
+    \end{minipage} \hspace{10px}
+    \begin{minipage}[t!]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/00_intro/apple_ARKit.jpg}
+        \subcaption[second caption.]{}
+        \label{fig:apple_ARKit}
+    \end{minipage}%
+    
+    \caption{\textbf{Application Examples.} The image in \ref{fig:roomba} represents the famous Roomba Autonomous vacuum cleaner, which is able to recognize where it is in the room, if it has already cleaned a place or if it is near a dangerous path - e.g. stairs; image \ref{fig:apple_ARKit} depicts a AR mobile game developed using the Apple ARKit.} 
+    \label{fig:applications}
+\end{figure}
 
 As the reader might notice, SLAM is a popular problem and the research community is focusing on in since many years. Several formulations have been proposed through the years and now current state-of-the-art SLAM systems are able to deliver impressive results in real-world scenarios. The most used formulation for SLAM systems is the so called \textit{graph-based SLAM}. In this approach, two sub-systems cooperate with each other to retrieve the best robot trajectory and world configuration given the on-board sensors' measurements. The two sub-systems are:
 
