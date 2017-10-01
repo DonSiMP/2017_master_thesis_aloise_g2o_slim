@@ -86,7 +86,7 @@ The system has been designed to deliver real-time performances, therefore, an ad
     \item The actual computation of the Hessian's blocks described in Equation \ref{eq:j_omega_j}
 \end{enumerate}
 
-However, the proposed system tackles both the issue, reducing the time required for each iteration to values comparable with state-of-the-art systems.
+However, the proposed system tackles both the issue, reducing the time required for each iteration to values comparable to state-of-the-art systems.
 
 \subsection{Memory management}\label{subsec:memory_management}
 Allocate the memory blocks for the Hessian $\hessian$ is a time-expensive operation. Moreover, it is required to allocate memory also for its decomposition $\L$ and $\L^T$ and for the dense vector $\bvec$, $\dx$ and $\mathbf{y}$. Moreover, copying memory - for example to create a permutation of a matrix -  is another time and resource consuming operation. 
@@ -112,7 +112,7 @@ However, for \textit{pose-pose} constraints, given the product $\mathbf{A} = \ja
 \noindent In this way the computation is performed just one time, thus there is a $75\%$ boost in terms of speed. Furthermore, since $\mathbf{A}$ is a symmetric matrix, it is possible to compute just the upper triangular part and then replicate it in the lower triangular, reducing even more the computational time.
 
 \section{Performance Results}\label{sec:performance_results}
-The library developed has been tested on different synthetic datasets, and the speed performances have been evaluated in terms of \textit{seconds per iteration}. All the test have been performed on a Lenovo ThinkPad W540 laptop equipped with:
+The library developed has been tested on different synthetic datasets both in \textit{pose-graph} and \textit{Bundle Adjustment} scenarios. It is evaluated both the quality of the solution found and the speed performances - in terms of \textit{seconds per iteration}. All the test have been performed on a Lenovo ThinkPad W540 laptop equipped with:
 
 \begin{itemize}
     \item CPU: Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz

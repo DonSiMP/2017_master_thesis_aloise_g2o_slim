@@ -270,7 +270,7 @@ Finally, it is necessary to compute the Jacobian $\jacob$ deriving from the cons
 In the next Section it is proposed a deeper analysis on the error representation and the linearization of 3D pose constraints, highlighting the non-linearity of the computation and the proposed approach to overcome this issue.
 
 \section{Dealing with SE3 Objects}{\label{sec:se3_objects}}
-3D poses are complex objects to manage, due to their rotational part that introduces many an highly non-linear contribution in the linearization process. In this section it is proposed an approach that aims to reduce those non-linearities while delivering comparable performances with other state-of-the-art systems.
+3D poses are complex objects to manage, due to their rotational part that introduces many an highly non-linear contribution in the linearization process. In this section it is proposed an approach that aims to reduce those non-linearities while delivering performances comparable to other state-of-the-art systems.
 
 \subsection{Chordal Distance Based Error Function}\label{subsec:chordal_dist_error}
 Recalling \ref{subsec:3d_pose_graphs}, we have defined the functions v2t and t2v that allow to map the minimal representation of the state into the redundant one and vice-versa. Through them, we defined the operators \textit{box-plus} and \textit{box-minus}, described respectively in Equations \ref{eq:standard_boxplus_se3} and \ref{eq:standard_boxminus_se3}. Sticking to this notion, the \textit{predicted measurement} $\Pred_{ij}$ of pose $j$ from pose $i$ is computed as
@@ -467,4 +467,4 @@ Thanks to the Unscented Transform it is possible to have a fast and quite accura
 
 \vspace{15px}
 
-All those features lead to an accurate and fast optimizer, that delivers results comparable with other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice.
+All those features lead to an accurate and fast optimizer, that delivers results comparable to other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice.

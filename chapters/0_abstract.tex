@@ -1,5 +1,11 @@
 \begin{abstract}
-\lipsum[1-3]
+The goal of this Master's Thesis is the design and development of a graph-optimization system tailored for SLAM pipelines. The work focuses on simplicity, accuracy and speed, reaching excellent results in each of the targeted fields.
+
+In particular, this back-end aims attention at 3D pose-graphs and 3D Bundle Adjustment problems, producing outcomes comparable to current state-of-the-art systems like \texttt{g2o} \cite{kummerle2011g}. 
+
+At its core there is a novel error function for $SE(3)$ objects based on the concept of matrices' chordal distance. This approach reduces the problem's non-linearity bringing several benefits to the computation. The fastness of the system is due to a well-designed implementation that performs zero memory copy during the iterative part and that exploits SIMD instructions of modern CPUs and a smart use of the CPU cache.
+
+Finally, the systems has been tested on both synthetic and real-world datasets and in both scenarios it succeeded in its purposes, being able to produce results comparable to state-of-the-art systems in only 5 thousands lines of code. 
 \end{abstract}
 
 \chapter*{Nomenclature}\label{ch:symbols}
@@ -41,5 +47,4 @@
     FLOPS \> Floating Point Operations Per Second \\[1ex]
 	OpenCV  \> Open source Computer Vision (library), \url{www.opencv.org} \\[1ex]
 	Git  \> Git revision control, \url{www.git-scm.com} \\[1ex]
-	Eclipse \> Eclipse open source IDE, \url{www.eclipse.org}
 \end{tabbing}
