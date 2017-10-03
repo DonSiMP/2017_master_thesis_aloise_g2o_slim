@@ -1,0 +1,62 @@
+%% Creator: Inkscape inkscape 0.91, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'chordal_distance.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{294.3776024bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.99590246)%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{figures/04_solvingSe3/chordal_distance.pdf}}%
+    \put(0.01651017,0.82954675){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.2775832\unitlength}\centering \footnotesize Manifold curvature\end{minipage}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{figures/04_solvingSe3/chordal_distance.pdf}}%
+    \put(0.51086467,0.68221774){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.20964317\unitlength}\centering \footnotesize Approximated Line Segment\end{minipage}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{figures/04_solvingSe3/chordal_distance.pdf}}%
+    \put(0.22579175,0.7734569){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.1942221\unitlength}\centering $\mathbf{p}_1$\end{minipage}}}%
+    \put(0.40869761,0.89688663){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.1942221\unitlength}\centering $\mathbf{p}_2$\end{minipage}}}%
+    \put(0.33595011,0.65736892){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.1942221\unitlength}\centering $\hat{\mathbf{p}_1}$\end{minipage}}}%
+    \put(0.52393209,0.78606105){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.1942221\unitlength}\centering $\hat{\mathbf{p}_2}$\end{minipage}}}%
+  \end{picture}%
+\endgroup%

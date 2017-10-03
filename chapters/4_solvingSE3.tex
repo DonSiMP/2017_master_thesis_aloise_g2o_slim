@@ -18,7 +18,25 @@ As it as been already mentioned in Chapter \ref{ch:basics}, standard optimizatio
     \item \textbf{Direct methods} \cite{davis2006directSPsolvers} that solve the system in just one step.
 \end{enumerate}
 
-\noindent The former ones like \textit{Conjugate Gradient} or \textit{Generalized Minimal Residual Method} - shortened as GMRES - exploit fast matrix-vector product to deliver good performances even if the solution is found iteratively. Those often use also \textit{preconditioning} that consist in the application of a transformation - called the preconditioner - that turns the system into a form more suitable for numerical solving methods - e.g. \textit{Preconditioned Conjugate Gradient} (PCG). The latter group, instead, exploits matrix decompositions like \textit{Cholesky} or the $QR$-decomposition to efficiently retrieve a solution in one step. Crucial for those kind of methods is the \textit{fill-in} - i.e. the increase of non-zero elements in the decomposition with respect to the source matrix. As already mentioned in Section \ref{sec:sparse_ls}, variable reordering techniques, that consists in applying a suitable permutation to the source matrix, are able to reduce dramatically the fill-in, allowing a faster decomposition. Several algorithm are proposed in the literature to compute the proper permutation - e.g. AMD, COLAMD. For the Cholesky $LU$ decomposition it is also possible to evaluate the pattern of the $L$ matrix before computing the actual decomposition, through the \textit{Symbolic Cholesky Decomposition}. 
+\noindent The former ones like \textit{Conjugate Gradient} or \textit{Generalized Minimal Residual Method} - shortened as GMRES - exploit fast matrix-vector product to deliver good performances even if the solution is found iteratively. Those often use also \textit{preconditioning} that consist in the application of a transformation - called the preconditioner - that turns the system into a form more suitable for numerical solving methods - e.g. \textit{Preconditioned Conjugate Gradient} (PCG). The latter group, instead, exploits matrix decompositions like \textit{Cholesky} or the $QR$-decomposition to efficiently retrieve a solution in one step. Crucial for those kind of methods is the \textit{fill-in} - i.e. the increase of non-zero elements in the decomposition with respect to the source matrix. 
+
+\begin{figure}[!hbt]
+    \centering
+    \begin{minipage}[t!]{\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/h_l_no_permutation.pdf}
+        \label{fig:cholesky_fill_in_no_odering}
+    \end{minipage}\\
+    \begin{minipage}[t!]{\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/h_l_amd.pdf}
+        \label{fig:cholesky_fill_in_amd}
+    \end{minipage}%
+    \caption{\textbf{Cholesky Fill-In.} The figure highlights the fill-in due to the factorization of a $(2000\times2000)$ symmetric PSD matrix: non-zero blocks are in white, while null-blocks in black. The first row illustrates the patterns of matrices $\hessian$ and its decomposition $\L$ - respectively on the left and on the right. In the bottom row, the same matrices after the permutation of $\hessian$ using the AMD ordering. It is clear the ordering contribution in reducing the fill-in of the factorization, minimizing the memory required to store $\L$ and the number of block-matrices operations.} 
+    \label{fig:cholesky_fill_in}
+\end{figure}
+
+As already mentioned in Section \ref{sec:sparse_ls}, variable reordering techniques, that consists in applying a suitable permutation to the source matrix, are able to reduce dramatically the fill-in, allowing a faster decomposition. Several algorithm are proposed in the literature to compute the proper permutation - e.g. AMD, COLAMD. For the Cholesky $LU$ decomposition it is also possible to evaluate the pattern of the $L$ matrix before computing the actual decomposition, through the \textit{Symbolic Cholesky Decomposition}. The reader might appreciate the variable reordering contribution in Figure \ref{fig:cholesky_fill_in}.
 
 In the remaining of the Section, it will be given a more detailed description on how to solve a sparse linear system using the Cholesky decomposition of the matrix $\hessian$.
 
@@ -317,6 +335,13 @@ It is possible to approach this problem using a different error formulation that
 \end{equation}
 
 \noindent It is good to notice that the difference operator employed in Equation \ref{eq:chordal_distance_true} is the standard Euclidean \textit{minus}, executed element-wise.
+
+\begin{figure}[!hbt]
+    \centering
+    \resizebox{0.7\textwidth}{!}{\input{figures/04_solvingSe3/chordal_distance.pdf_tex}}
+    \caption{\textbf{Chordal Distance.} This figure shows the underlying concept of the new error function: the distance between $\mathbf{p}_1$ and $\mathbf{p}_2$ can be approximated with the Euclidean distance computed between the projection of those points onto the relative chord - namely between $\hat{\mathbf{p}}_1$ and $\hat{\mathbf{p}}_2$.} 
+    \label{fig:chordal_distance}
+\end{figure}
 
 We define also a new function, that given a 3D isometry returns a 12 vector made with its components, namely:
 
