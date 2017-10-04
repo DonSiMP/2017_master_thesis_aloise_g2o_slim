@@ -52,8 +52,8 @@
     \put(0,0){\includegraphics[width=\unitlength,page=1]{figures/04_solvingSe3/chordal_distance.pdf}}%
     \put(0.01651017,0.82954675){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.2775832\unitlength}\centering \footnotesize Manifold curvature\end{minipage}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{figures/04_solvingSe3/chordal_distance.pdf}}%
-    \put(0.51086467,0.68221774){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.20964317\unitlength}\centering \footnotesize Approximated Line Segment\end{minipage}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{figures/04_solvingSe3/chordal_distance.pdf}}%
+    \put(0.51086467,0.68221774){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.20964317\unitlength}\centering \footnotesize Approximated Line Segment\end{minipage}}}%
     \put(0.22579175,0.7734569){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.1942221\unitlength}\centering $\mathbf{p}_1$\end{minipage}}}%
     \put(0.40869761,0.89688663){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.1942221\unitlength}\centering $\mathbf{p}_2$\end{minipage}}}%
     \put(0.33595011,0.65736892){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.1942221\unitlength}\centering $\hat{\mathbf{p}_1}$\end{minipage}}}%

@@ -488,8 +488,75 @@ Going back to our problem, it is possible to transform the information matrix of
 
 The adapted information matrix $\bar{\Omega}_k = \bar{\Sigma}_k^{-1}$ is a $(12\times12)$ matrix. However, since we are mapping a 6-dimensional space in a 12-dimensional space with only $N = 2n + 1 = 13$ Sigma Points, it is possible to retrieve covariance matrix subject to (multiple) rank-loss. Therefore, it is necessary to add a non-zero scalar $\epsilon$ to the main diagonal of $\bar{\Sigma}_k$, in order to do not have numerical problems during its inversion.
 
+\begin{figure}[!hbt]
+    \centering
+    \begin{minipage}[t!]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/viewer_500p.png}
+        \subcaption{}
+        \label{fig:500p_solved}
+    \end{minipage}\\
+    \begin{minipage}[t!]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/viewer_sphere.png}
+        \subcaption{}
+        \label{fig:sphere_solved}
+    \end{minipage}%
+    
+    \caption{\textbf{Solved Graphs} Top image: the synthetic world graph solved. Bottom: synthetic sphere solved.} 
+    \label{fig:solved_graphs}
+\end{figure}
+
 Thanks to the Unscented Transform it is possible to have a fast and quite accurate approximation of the adapted information matrix, leading to consistent results from the optimization process. Moreover, since the minus operator employed in this formulation is the standard Euclidean one, the computation is performed just one time for each measurement $\Meas_{k}$, reducing the computational effort of each optimization step.
 
-\vspace{15px}
+\section{Convergence Results}\label{sec:convergence_results}
+In the previous Sections, it has been proposed to the reader a complete overview of the theory underlying our optimization system. This Section, instead, proposes some tangible results brought by the novel approach described in this work.
 
-All those features lead to an accurate and fast optimizer, that delivers results comparable to other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice.
+To test the convergence of the system, we took two reference pose-graphs and we add them different kind of noises in order to create multiple initial guess for the optimization algorithm. The graphs used are:
+
+\begin{enumerate}
+    \item \textbf{Synthetic world:} that has 501 vertices and 4277 measurements (easier);
+    \item \textbf{Synthetic sphere:} 2500 vertexes and 9799 edges (hard).
+\end{enumerate}
+
+\noindent Figure \ref{fig:solved_graphs} shows the two graphs solved.
+Here we propose the comparison between our system and the state-of-the-art optimizer \texttt{g2o} \cite{kummerle2011g}.
+
+The first test done consisted in applying the noise only on the \textit{translational part} of the nodes; the employed graph is the synthetic world - Figure \ref{fig:500p_solved}. Obviously, both the system preformed well recreating the original graph, as shown in Figure \ref{fig:500p_st_solution}.
+
+\begin{figure}[!hbt]
+    \centering
+    \includegraphics[width=\textwidth]{figures/04_solvingSe3/viewer_500p_st_SOLVED.png}
+    \caption{\textbf{Translational Noise.} From left to right: \textit{initial guess}, \texttt{g2o} solution, \textit{our} solution. Both the approaches generate consistent results.} 
+    \label{fig:500p_st_solution}
+\end{figure}
+
+However, our system claims to be more effective to manipulate rotations. Consequently, the second test focused on this: the initial guess, in fact, was created from the \textit{synthetic world} graph adding white noise - i.e. sampled from $\mathcal{N}(0,1)$ - \textit{only} to the rotation $\rot$ of each node.
+
+\begin{figure}[!hbt]
+    \centering    
+    \begin{minipage}[t!]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/viewer_500p_awgn_SOLVED.png}
+        \subcaption{} 
+        \label{fig:500p_awgn_solution}
+    \end{minipage}\\
+    \begin{minipage}[t!]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/500p_N0_1.pdf}
+        \subcaption{}
+        \label{fig:500p_awgn_chi2}
+    \end{minipage}%
+    \caption{\textbf{Rotational Noise.} Figure (A) from left to right: \textit{initial guess}, \texttt{g2o} solution, \textit{our} solution. Both the approaches generate consistent results. Figure (B) shows the \texttt{chi2} of both approaches at each iteration: it is clear the convergence gap between \g2o - in blue - and our approach - in orange. The $y$ axis' scale is logarithmic. The iterations performed are 10, therefore, the point $x = 1$ indicates the \texttt{chi2} of the initial guess.}
+    \label{fig:500p_awgn}
+\end{figure}
+
+\noindent With this initial guess, \g2o suffers from the non-linearities introduced by the $\v2t$ and $\text{t2v}$ functions as the reader might notice in Figure \ref{fig:500p_awgn_solution}. To confirm the qualitative result obtained, we decided to compare \g2o's \texttt{chi2} with the one obtained with our approach, iteration per iteration. In order to obtain comparable objects - and to not bias the comparison - it has been saved the graph obtained with our system at each iteration and evaluated its \textit{initial} \texttt{chi2} in \g2o. The result of this comparison is shown in figure \ref{fig:500p_awgn_chi2}.
+
+In order to further confirm the quality of the chosen approach, is has been generated another initial guess for the same graph, but the noise figure was sampled from $\mathcal{N}(0, 1000)$. In this case both the systems struggle to find a solution in only 10 iteration, but the trend is better with our error function - see Figure.
+
+
+
+%\vspace{15px}
+
+%All those features lead to an accurate and fast optimizer, that delivers results comparable to other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice.

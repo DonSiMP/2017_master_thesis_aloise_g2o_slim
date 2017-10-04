@@ -112,13 +112,79 @@ However, for \textit{pose-pose} constraints, given the product $\mathbf{A} = \ja
 \noindent In this way the computation is performed just one time, thus there is a $75\%$ boost in terms of speed. Furthermore, since $\mathbf{A}$ is a symmetric matrix, it is possible to compute just the upper triangular part and then replicate it in the lower triangular, reducing even more the computational time.
 
 \section{Performance Results}\label{sec:performance_results}
-The library developed has been tested on different synthetic datasets both in \textit{pose-graph} and \textit{Bundle Adjustment} scenarios. It is evaluated both the quality of the solution found and the speed performances - in terms of \textit{seconds per iteration}. All the test have been performed on a Lenovo ThinkPad W540 laptop equipped with:
+The library developed has been tested on different synthetic datasets both in \textit{pose-graph} and \textit{Bundle Adjustment} scenarios. All the test have been performed on a Lenovo ThinkPad W540 laptop equipped with:
 
 \begin{itemize}
     \item CPU: Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz
-    \item RAM: $2 \times 4$GB $+$ $2\times8$GB SODIMM DDR3 - total 22GB
+    \item RAM: $2 \times 4$GB $+$ $2\times8$GB SODIMM DDR3 - total 24GB
     \item Disk: SanDisk(R) Ultra II(TM) 240GB Solid State Drive
     \item OS: Ubuntu 16.04 LTS
 \end{itemize}
 
-%TODO Results on synthetic datasets
+Since the works focuses on \textit{pose-graph} optimization, the results will be mostly related to this kind of problem. In this case the blocks composing the Hessian have fixed size - i.e. $(6\times6)$ - and, therefore, it is possible to employ a \texttt{SparseBlockMatrix} with static fix-sized blocks. 
+
+The experiments proposed are obtained using three different datasets that have an increasing number of edges:
+
+\begin{enumerate}
+    \item The open-loop graph created by ProSLAM\_stud from the \textit{Kitti\_00} run (further information in Chapter \ref{ch:cases}), with 752 nodes and 903 edges (easy);
+    \item A synthetic sphere with 2500 vertexes and 9799 edges (medium);
+    \item A synthetic dataset wit 2001 poses and 24422 edges (hard).
+\end{enumerate}
+
+Figure \ref{fig:step_time} shows the step-time's evolution of both systems during the optimization of the three datasets. Furthermore, in Table \ref{tab:total_optimization_time} are reported the total optimization time employed by both systems to execute 10 steps.
+
+\begin{figure}[!hbt]
+    \centering
+    \includegraphics[width=\textwidth]{figures/05_implementation/step_time.pdf}
+%    \resizebox{0.7\textwidth}{!}{\input{figures/05_implementation/step_time.pdf}}
+    \caption{\textbf{Pose Graph Optimization Step Time Comparison.} Comparison between \texttt{g2o} - in blue - and \textit{our system} - in orange - of the time required to execute an optimization step. Despite the minimalistic implementation, our approach is significantly faster than \texttt{g2o}; the gap increases with the number of edges, indicating a slightly better scalability of the proposed system with respect to \texttt{g2o}.} 
+    \label{fig:step_time}
+\end{figure}
+
+The reader might notice how well our systems behaves, delivering performances that are better or at least comparable with the one obtained through a state-of-the-art complex system like \texttt{g2o}. Furthermore, the results show that the more the edges, the higher is the gap between our approach and \texttt{g2o}, indicating that our implementation is very efficient and slightly more scalable.
+
+\begin{table}[!hbt]
+    \centering
+    \begin{tabular}{ l l l l }
+        \toprule 
+        \multicolumn{4}{ c }{\textbf{Total Optimization Time}} \\ \hline
+        System & \textit{easy} $[s]$ & \textit{medium} $[s]$ & \textit{hard} $[s]$ \\
+        \midrule
+        \texttt{g2o} & 0.0349 & 6.0319 & 24.0242  \\ 
+        our & 0.0588 & 4.7000 & 15.6795 \\ \hline
+    \end{tabular}
+    \caption{\textbf{Pose Graph Optimization Total Time Comparison.} In this table are reported the total optimization time required by the two systems to complete 10 iterations. The reader might notice that in graphs with more edges, our approach performs better than \texttt{g2o}.}
+    \label{tab:total_optimization_time}
+\end{table}
+
+For Bundle Adjustment graphs, our systems struggles to obtain the same results seen in pose-graph optimization. This is mainly due to use of a \texttt{SparseBlockMatrix} with dynamic blocks, that makes our implementation slower than its competitor \texttt{g2o}, as it is reported in Figure \ref{fig:step_time_BA} and Table \ref{tab:total_optimization_time_BA}.
+
+\begin{figure}[!hbt]
+    \centering
+    \includegraphics[width=\textwidth]{figures/05_implementation/step_time_BA.pdf}
+    \caption{\textbf{BA Optimization Step Time Comparison.} Comparison between \texttt{g2o} - in blue - and \textit{our system} - in orange - of the time required to execute an optimization step. In this case \texttt{g2o} leads always the comparison.} 
+    \label{fig:step_time_BA}
+\end{figure}
+
+The results are obtained running the two systems on two datasets that have an increasing number of nodes and edges. In particular:
+
+\begin{enumerate}
+    \item A synthetic dataset with 9472 vertexes (1001 \texttt{SE3} + 8471 \texttt{R3}) and 25537 edges (6013 \texttt{SE3} + 19524 \texttt{SE3\_R3}) - called \textit{small};
+    \item A bigger synthetic dataset that has 31796 vertexes (2001 \texttt{SE3} + 29795 \texttt{R3}) and 117375 edges (25327 \texttt{SE3} + 92048 \texttt{SE3\_R3}) - called \textit{big}.
+\end{enumerate}
+
+\begin{table}[!hbt]
+    \centering
+    \begin{tabular}{ l l l }
+        \toprule 
+        \multicolumn{3}{ c }{\textbf{Total Optimization Time}} \\ \hline
+        System & \textit{small} $[s]$ & \textit{big} $[s]$ \\
+        \midrule
+        \texttt{g2o} & 1.8242 & 9.2920 \\ 
+        our & 3.8641 & 42.3554 \\ \hline
+    \end{tabular}
+    \caption{\textbf{BA Optimization Total Time Comparison.} In this table are reported the total optimization time required by the two systems to complete 10 iterations. The reader might notice an inverted trend with respect to pure pose-graph optimization, with our system struggling when the number of edges increases.}
+    \label{tab:total_optimization_time_BA}
+\end{table}
+
+\noindent One possible solution to this bad trend can be the use of static blocks also for BA problems, solving the linear system $\hessian \dx = -\bvec$ using the \textit{Schur Complement}.
