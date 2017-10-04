@@ -547,16 +547,33 @@ However, our system claims to be more effective to manipulate rotations. Consequ
         \subcaption{}
         \label{fig:500p_awgn_chi2}
     \end{minipage}%
-    \caption{\textbf{Rotational Noise.} Figure (A) from left to right: \textit{initial guess}, \texttt{g2o} solution, \textit{our} solution. Both the approaches generate consistent results. Figure (B) shows the \texttt{chi2} of both approaches at each iteration: it is clear the convergence gap between \g2o - in blue - and our approach - in orange. The $y$ axis' scale is logarithmic. The iterations performed are 10, therefore, the point $x = 1$ indicates the \texttt{chi2} of the initial guess.}
+    \caption{\textbf{Rotational Noise.} Figure (A) from left to right: \textit{initial guess}, \texttt{g2o} solution, \textit{our} solution. Figure (B) shows the \texttt{chi2} of both approaches at each iteration: it is clear the convergence gap between \g2o - in blue - and our approach - in orange. The $y$ axis' scale is logarithmic. The iterations performed are 10, therefore, the point $x = 1$ indicates the \texttt{chi2} of the initial guess.}
     \label{fig:500p_awgn}
 \end{figure}
 
-\noindent With this initial guess, \g2o suffers from the non-linearities introduced by the $\v2t$ and $\text{t2v}$ functions as the reader might notice in Figure \ref{fig:500p_awgn_solution}. To confirm the qualitative result obtained, we decided to compare \g2o's \texttt{chi2} with the one obtained with our approach, iteration per iteration. In order to obtain comparable objects - and to not bias the comparison - it has been saved the graph obtained with our system at each iteration and evaluated its \textit{initial} \texttt{chi2} in \g2o. The result of this comparison is shown in figure \ref{fig:500p_awgn_chi2}.
+With this initial guess, \g2o suffers from the non-linearities introduced by the $\v2t$ and $\text{t2v}$ functions as the reader might notice in Figure \ref{fig:500p_awgn_solution}. To confirm the qualitative result obtained, we decided to compare \g2o's \texttt{chi2} with the one obtained with our approach, iteration per iteration. In order to obtain comparable objects - and to not bias the comparison - it has been saved the graph obtained with our system at each iteration and evaluated its \textit{initial} \texttt{chi2} in \g2o. The result of this comparison is shown in figure \ref{fig:500p_awgn_chi2}.
 
-In order to further confirm the quality of the chosen approach, is has been generated another initial guess for the same graph, but the noise figure was sampled from $\mathcal{N}(0, 1000)$. In this case both the systems struggle to find a solution in only 10 iteration, but the trend is better with our error function - see Figure.
+In order to further confirm the quality of the chosen approach, is has been generated another initial guess for the same graph, but the noise figure was sampled from $\mathcal{N}(0, 1000)$. In this case both the systems struggle to find a solution in only 10 iteration, but the trend is better with our error function - see Figure \ref{fig:500p_gnadvanced}.
 
+\begin{figure}[!hbt]
+    \centering    
+    \begin{minipage}[t!]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/viewer_500p_gnadvanced_SOLVED.png}
+        \subcaption{} 
+        \label{fig:500p_gnadvanced_solution}
+    \end{minipage}
+    \begin{minipage}[t!]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/500p_N0_1e3R.pdf}
+        \subcaption{}
+        \label{fig:500p_gnadvanced_chi2}
+    \end{minipage}%
+    \caption{\textbf{Advanced Rotational Noise.} Figure (A) from left to right: \textit{initial guess}, \texttt{g2o} solution, \textit{our} solution. Figure (B) shows the \texttt{chi2} of both approaches at each iteration. \g2o's trend might indicate that the system got stuck in a local minimum.}
+    \label{fig:500p_gnadvanced}
+\end{figure}
 
-
+The next step consists in applying both noise figures to the \textit{sphere} graph, together with a translational perturbation (therefore a 6DoF noise vector). 
 %\vspace{15px}
 
 %All those features lead to an accurate and fast optimizer, that delivers results comparable to other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice.
