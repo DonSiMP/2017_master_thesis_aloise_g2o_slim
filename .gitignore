@@ -5,10 +5,12 @@
 *.out
 *.gz
 *.synctex.gz
-*.pdf
 *.toc
 *.lof
 *.lot
 
+
+
 papers/
+figures/raw
 
