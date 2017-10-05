@@ -573,7 +573,67 @@ In order to further confirm the quality of the chosen approach, is has been gene
     \label{fig:500p_gnadvanced}
 \end{figure}
 
-The next step consists in applying both noise figures to the \textit{sphere} graph, together with a translational perturbation (therefore a 6DoF noise vector). 
-%\vspace{15px}
+The next step consists in applying both noise figures to the \textit{sphere} graph, together with a translational perturbation (therefore a 6 DoF noise vector), generating a very harsh initial guess.
 
-%All those features lead to an accurate and fast optimizer, that delivers results comparable to other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice.
+\begin{figure}[!hbt]
+    \centering    
+    \begin{minipage}[t!]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/viewer_sphere_awgn_SOLVED.png}
+        \subcaption{} 
+        \label{fig:sphere_awgn_solution}
+    \end{minipage}\\
+    \begin{minipage}[t!]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/sphere_N0_1.pdf}
+        \subcaption{}
+        \label{fig:sphere_awgn_chi2}
+    \end{minipage}%
+    \caption{\textbf{Sphere 6 DoF Noise.} Figure (A) from left to right: \textit{initial guess}, \texttt{g2o} solution, \textit{our} solution. Figure (B) shows the \texttt{chi2} of both approaches at each iteration. From the plot it is clear that \g2o converges to a local minimum distant from the optimum. Here our approach instead is able to converge to the proper solution in less than 40 iterations.}
+    \label{fig:sphere_awgn}
+\end{figure}
+
+\noindent Given the complexity of the initial guess, we decided to perform more iterations with respect the previous graph - i.e. 100. Figure \ref{fig:sphere_awgn} shows the qualitative and quantitative results of both \g2o and our approach, after applying 6 DoF Gaussian noise - sampled from $\mathcal{N}(0,1)$. The reader might appreciate the fact that \g2o converges to a \textit{local minimum} far from the optimum, instead, our approach is able to \textbf{reach the optimum in less than 40 iterations}.
+
+Finally, in the last test it has been increased the rotational component of the noise, which in this case is sampled from $\mathcal{N}(0,1)$. In this extreme case without a kernel both the systems struggles to optimize the graph.
+
+\begin{figure}[!hbt]
+    \centering    
+    \begin{minipage}[t!]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/viewer_sphere_gnadvanced_SOLVED.png}
+        \subcaption{} 
+        \label{fig:sphere_gnadvanced_solution}
+    \end{minipage}
+    \begin{minipage}[t!]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/04_solvingSe3/sphere_N0_1e3R.pdf}
+        \subcaption{}
+        \label{fig:sphere_gnadvanced_chi2}
+    \end{minipage}%
+    \caption{\textbf{Advanced Rotational Noise.} Figure (A) from left to right: \textit{initial guess}, \texttt{g2o} solution, \textit{our} solution. Figure (B) shows the \texttt{chi2} of both approaches at each iteration. Even if both systems fail in reaching the optimum, our system is able to generate a fair solution that can be further refined to reach the proper convergence.}
+    \label{fig:sphere_gnadvanced}
+\end{figure}
+
+Figure \ref{fig:sphere_gnadvanced} shows the outcomes of both the systems: clearly neither \g2o nor our system reached the optimum, however the solution retrieved with the proposed method is evidently more consistent.
+
+In Subsection \ref{subsec:benefits}, it has been highlighted that converting the information matrices from a 6-dimensional space to a 12-dimensional one through the \textit{Unscented Transform} may generate multiple rank loss, thus, the matrix $\bar{\Sigma}_k = \bar{\Omega}_k^{-1}$ must be conditioned somehow to avoid singularities. Given this, it has been tested the effects of different conditioning methods, however the most promising ones where basically 3:
+
+\begin{enumerate}
+    \item \textbf{Soft Conditioning.} It is computed the \textit{Singular Value Decomposition} of matrix $\bar{\Sigma}_k = UDV^\star$, the it is added a \textit{non-zero} value $\epsilon$ only to the degenerated eigenvalues and finally it is computed the matrix $\bar{\Sigma}_k^{conditioned} = U\tilde{D}V^\star$.
+    \item \textbf{Mid Conditioning.} This is the method actually used to obtain the results seen until now, and consists in applying a non-zero value $\epsilon$ to all the elements on the diagonal of $\bar{\Sigma}_k$. Reasonable values are $\epsilon \in [10^{-2}, 10^{-4}]$.
+    \item \textbf{Hard Conditioning.} In this case, all the values outside the main diagonal are simply ignored - i.e. set to zero. 
+\end{enumerate}
+
+\begin{figure}[!hbt]
+    \centering    
+    \includegraphics[width=0.7\textwidth]{figures/04_solvingSe3/viewer_sphere_awgn_CONDITIONINGS.png}
+    \caption{\textbf{Conditioning Methods.} The outcomes of the three conditioning methods used to compute the measurements' information matrix. Given the initial guess relative to Figure \ref{fig:sphere_awgn_solution}, from left to right are illustrated: soft, mid and hard conditioning.}
+    \label{fig:sphere_conditionings}
+\end{figure}
+
+This comparison opens a new path for further investigations, in order to retrieve the best conditioning method to compute the measurements' information matrices.
+
+\vspace{15px}
+
+As this Section showed, the novel features introduced so far lead to an accurate and more robust optimizer, that delivers results \textbf{comparable or better} to other state-of-the-art systems. In the next Chapter, the reader will have an insight on the actual implementation of the system, in order to better understand how all those mathematical concepts have been applied in practice and to show the speed performances reached by our system.
