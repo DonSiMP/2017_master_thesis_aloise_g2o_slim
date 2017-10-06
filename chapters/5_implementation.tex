@@ -8,7 +8,7 @@ This Chapter will better analyze the actual implementation of a 3D Optimizer. In
 
 While the \texttt{Graph} is just a \textit{container} for nodes and edges, the optimizer has to perform several computations in order to retrieve the linear system $\hessian \dx = -\bvec$ and then solve it. Therefore, underlying the optimizer a linear solver is required to efficiently solve the aforementioned system. 
 
-Once that the front-end populates the graph - or it is simply loaded from file - it is fed as input of the optimizer; the general work-flow of a graph optimizer is the following:
+Once that the front-end populates the graph (or just loaded somehow), it is fed as input of the optimizer; the general work-flow of a graph optimizer is the following:
 
 \begin{enumerate}
     \item \textbf{Linearization}: for each edge it is computed the error with respect to the current system state and then the relative Jacobian. The output of this phase is the contribution of the edge to the Hessian matrix and the right-and-side vector.
@@ -23,16 +23,16 @@ It is good to notice that our system is almost completely self-contained: the on
 The \texttt{Graph} is basically constituted by a collection of edges and nodes. The nodes can be either of type \textit{pose} or \textit{point} - represented respectively by the objects \texttt{VertexSE3} and \texttt{VertexR3}. Each vertex is represented by
 
 \begin{itemize}
-    \item Its \textbf{estimate}, which can be a 3D isometry or a 3D position - namely a \texttt{Pose3D} or a \texttt{Point3D}
-    \item A unique \textbf{index} that is used to recognize the vertex
+    \item Its \textbf{estimate}, which can be a 3D isometry or a 3D position - namely a \texttt{Pose3D} or a \texttt{Point3D};
+    \item A unique \textbf{index} that is used to recognize the vertex;
     \item A boolean variable that indicates whether the node is \textbf{fixed} or not. A fixed Vertex must not be involved in the optimization process. It is good to notice that at least one fixed vertex must exists in the graph, otherwise the optimization problem is undefined.
 \end{itemize}
 
 Analogously, the edge are of type \textit{pose-pose} or \textit{pose-point} - represented respectively by the objects \texttt{EdgeSE3} and \texttt{EdgeSE3\_R3}. The edge have several fields, namely:
 
 \begin{itemize}
-    \item The actual \textbf{measurement} that can be either a \texttt{Pose3D} or a \texttt{Point3D}
-    \item The \textbf{data association} that consists in a pair of \texttt{Vertex} which represents the nodes involved in the edge
+    \item The actual \textbf{measurement} that can be either a \texttt{Pose3D} or a \texttt{Point3D};
+    \item The \textbf{data association} that consists in a pair of \texttt{Vertex} which represents the nodes involved in the edge;
     \item The \textbf{information matrix} related to the measurement - namely a \texttt{Matrix6} or a \texttt{Matrix3}.
 \end{itemize}
 
@@ -82,8 +82,8 @@ The update is applied node by node through the \textit{box-plus} operator descri
 The system has been designed to deliver real-time performances, therefore, an ad-hoc implementation is required to achieve such result. The system described in the previous Section has two main time-consuming operations, both performed at each iteration:
 
 \begin{enumerate}
-    \item Allocation and management of the memory for the Hessian's blocks
-    \item The actual computation of the Hessian's blocks described in Equation \ref{eq:j_omega_j}
+    \item Allocation and management of the memory for the Hessian's blocks;
+    \item The actual computation of the Hessian's blocks described in Equation \ref{eq:j_omega_j}.
 \end{enumerate}
 
 However, the proposed system tackles both the issue, reducing the time required for each iteration to values comparable to state-of-the-art systems.
@@ -141,7 +141,7 @@ Figure \ref{fig:step_time} shows the step-time's evolution of both systems durin
     \label{fig:step_time}
 \end{figure}
 
-The reader might notice how well our systems behaves, delivering performances that are better or at least comparable with the one obtained through a state-of-the-art complex system like \texttt{g2o}. Furthermore, the results show that the more the edges, the higher is the gap between our approach and \texttt{g2o}, indicating that our implementation is very efficient and slightly more scalable.
+The reader might notice how well our systems behaves, delivering performances that are better or at least comparable with the one obtained through a state-of-the-art complex system like \texttt{g2o}. Furthermore, the results show that an increased number of edges corresponds to a bigger gap between our approach and \texttt{g2o}, indicating that our implementation is very efficient and slightly more scalable.
 
 \begin{table}[!hbt]
     \centering

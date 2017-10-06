@@ -128,17 +128,17 @@ Now that we defined every aspect of the problem, it is possible to embed everyth
 \section{Bundle Adjustment}\label{sec:bundle_adjustment_problem}
 This problem instantiation is more complex with respect what has been proposed in the previous Sections. In Section \ref{sec:pose_graphs} the constraints were only of type \textit{pose} - i.e. they lie on $SE(n)$ - while in Section \ref{sec:pose_land_graph} they were only of type \textit{point} - i.e. they lie on $\mathbb{R}^n$.
 
-Bundle Adjustment (BA) aims to estimate \textit{both} the robot trajectory \textbf{and} the world position of the landmarks, given constraints of type \textit{pose} and \textit{point}. Considering again the 2D case for simplicity, the state will be:
+Bundle Adjustment (BA) aims to estimate \textit{both} the robot trajectory \textit{and} the world position of the landmarks, given constraints of type \textit{pose} and \textit{point}. Considering again the 2D case for simplicity, the state will be:
 
 \begin{equation}
-    \SState = \left(\overbracket{\SState^R_1, ..., \SState^R_N}^{N poses}\: |\: \overbracket{\state^L_{N+1}, ..., \state^L_{N+M}}^{M landmarks}\right)
+    \SState = \left(\overbracket{\SState^R_1, ..., \SState^R_N}^{N \;poses}\: |\: \overbracket{\state^L_{N+1}, ..., \state^L_{N+M}}^{M \;landmarks}\right)
     \label{eq:state_ba_2d}
 \end{equation}
 
 \noindent where $\SState^R_i = \,\T{W}{R} \in SE(2)$ represents the $i$-th robot pose while $\state^L_j = \p = \left(p_x p_y\right)^T \in \mathbb{R}^2$ represents the world position of the $j$-th landmark. The set of increments $\dx$ will have the structure seen in \ref{eq:state_ba_2d}, namely:
 
 \begin{equation}
-    \dx = \left(\overbracket{\dx^R_1, ..., \dx^R_N}^{N poses}\: |\: \overbracket{\dx^L_{N+1}, ..., \dx^L_{N+M}}^{M landmarks}\right)
+    \dx = \left(\overbracket{\dx^R_1, ..., \dx^R_N}^{N \;poses}\: |\: \overbracket{\dx^L_{N+1}, ..., \dx^L_{N+M}}^{M \;landmarks}\right)
     \label{eq:increments_ba_2d}
 \end{equation}
 
@@ -195,9 +195,9 @@ The formulations seen in the previous Sections, they all rely on the fact that a
 In general to acquire those information, it is possible to proceed in different ways:
 
 \begin{itemize}
-    \item Get those parameters from the robot's specifics - if they are present.
-    \item Measure those quantity \textit{manually} on the robot
-    \item Perform ad-hoc calibration \textit{before} employing the robot in a mission
+    \item Get those parameters from the robot's specifics - if they are present;
+    \item Measure those quantity \textit{manually} on the robot;
+    \item Perform ad-hoc calibration \textit{before} employing the robot in a mission.
 \end{itemize}
 
 \noindent All those procedures share the same drawbacks: they are not able to estimate non-stationary parameters and, if the robot is subject to hardware changes, the calibration procedure must be repeated. 
@@ -207,9 +207,9 @@ A possible solution to this problem is to \textit{embed those parameters in the 
 Given a generic robot in a 2D environment, we have to introduce the following quantities:
 
 \begin{itemize}
-    \item $\l = (l_x \, l_y \, \theta_l)$ the pose of a generic sensor expressed with respect to the robot reference frame.
-    \item $\u_i$ and $\Omega_i^u$ that represent respectively the \textit{motion command} and its relative information matrix.
-    \item $\k$ the parameters of the robot's \textit{forward kinematic} 
+    \item $\l = (l_x \, l_y \, \theta_l)$ the pose of a generic sensor expressed with respect to the robot reference frame;
+    \item $\u_i$ and $\Omega_i^u$ that represent respectively the \textit{motion command} and its relative information matrix;
+    \item $\k$ the parameters of the robot's \textit{forward kinematic}.
 \end{itemize}
 
 The forward kinematic function $K(\u, \k)$ converts the wheels' velocities deriving from the motion commands into the actual robot displacement from node $i$ to $i+1$. For example, taking in consideration a differential drive kinematic scheme, the motion commands might be $\u = (v_r \, v_l)^T$ - respectively the left and right wheel velocity. Those lead to the following relation to compute the relative motion obtained during a time step $\Delta t$:

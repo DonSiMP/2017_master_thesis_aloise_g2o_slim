@@ -5,7 +5,7 @@ In this project it has been mainly addressed the optimization of \textbf{3D fact
 The reader might feel already comfortable with the formulation of those problems, thus, in this Section will be shown more in detail the approaches used in order to achieve \textbf{real-time performances} and how $SE(3)$ constraints have been manipulated in order to \textbf{reduce problem's non-linearity}. 
 
 \section{Exploit Sparsity}\label{sec:sparsity}
-As it as been already mentioned in Chapter \ref{ch:basics}, standard optimization algorithms like \textit{Gauss-Newton} or \textit{Levenberg-Marquardt} reduce the non-linear problem to the solution of a \textit{linear system}, namely
+As it as been already mentioned in Chapter \ref{ch:basics}, standard optimization algorithms like \textit{Gauss-Newton} or \textit{Levenberg-Marquardt} reduce the non-linear problem to the solution of a \textit{linear system}, namely:
 
 \begin{equation*}
     \hessian \dx = -\bvec
@@ -65,7 +65,7 @@ Another core aspect of sparse matrices is that there are several techniques to \
 
 \noindent The vector $row$ contains the indexes of the elements that correspond to the first non-zero entry of each row in the sparse matrix A.
 
-\textit{List of Lists} (LIL) represents another effective and easy to implement storage method is the. In this case, each row-vector is represented as a list of pairs that denotes the column index and the element's value.
+\textit{List of Lists} (LIL) represents another effective and easy-to-implement storage method. In this case, each row-vector is represented as a list of pairs that denotes the column index and the element's value.
 
 Recalling equation \ref{eq:sparse_hessian_structure}, since in this problem it has been considered only \textit{binary constraints}, the linearization of each edge generates $4$ block-contributions to the Hessian, namely:
 
@@ -79,7 +79,7 @@ Recalling equation \ref{eq:sparse_hessian_structure}, since in this problem it h
 \noindent Therefore, the Hessian can be intended to be a \textit{sparse block-matrix} where each entry is a matrix itself of a given size. In our work, it has been chosen to employ the LIL storage method with block-entries, in order to speed-up the numerical computations - better explained in the next Chapter.
 
 \subsection{Cholesky Decomposition}\label{subsec:cholesky_dec_general}
-In linear algebra, the Cholesky decomposition (or factorization) is the decomposition of a \textit{Hermitian}, positive semi-definite (PSD) matrix into the product of a \textit{lower triangular matrix} and its \textit{conjugate transpose}, namely
+In linear algebra, the Cholesky decomposition (or factorization) is the decomposition of a \textit{Hermitian}, positive semi-definite (PSD) matrix into the product of a \textit{lower triangular matrix} and its \textit{conjugate transpose}, namely:
 
 \begin{empheq}[box={\mybluebox[1pt]}]{equation}
     \label{eq:generic_cholesky}
@@ -394,9 +394,9 @@ Given those mathematical concepts, it is possible to define the error between tw
 \noindent Expanding the derivatives, it is possible to define the following - intuitively retrieved - objects:
 
 \begin{itemize}
-    \item  $\rot_{x0}^{\prime}$, $\rot_{y0}^{\prime}$ and $\rot_{z0}^{\prime}$ that represent derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the base rotation $\rot_k(\cdot)$, evaluated in 0 and with $k = \{x,y,z\}$.
-    \item  $\hat{\rot}_{x0}^{\prime}$, $\hat{\rot}_{y0}^{\prime}$, and $\hat{\rot}_{z0}^{\prime}$ that are the derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the rotational part of matrix $\mathbf{G}$, computed as $\hat{\rot}_{k0}^{\prime} = \rot_{i}^T \, \rot_{k0}^{\prime} \, \rot_j$ with $k = \{x,y,z\}$
-    \item $\hat{\mathbf{r}}_{k0}^{\prime}$ which describes the 9 vector obtained stacking the columns of $\hat{\rot}_{k0}^{\prime}$ - with $k = \{x,y,z\}$
+    \item  $\rot_{x0}^{\prime}$, $\rot_{y0}^{\prime}$ and $\rot_{z0}^{\prime}$ that represent derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the base rotation $\rot_k(\cdot)$, evaluated in 0 and with $k = \{x,y,z\}$;
+    \item  $\hat{\rot}_{x0}^{\prime}$, $\hat{\rot}_{y0}^{\prime}$, and $\hat{\rot}_{z0}^{\prime}$ that are the derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the rotational part of matrix $\mathbf{G}$, computed as $\hat{\rot}_{k0}^{\prime} = \rot_{i}^T \, \rot_{k0}^{\prime} \, \rot_j$ with $k = \{x,y,z\}$;
+    \item $\hat{\mathbf{r}}_{k0}^{\prime}$ which describes the 9 vector obtained stacking the columns of $\hat{\rot}_{k0}^{\prime}$ - with $k = \{x,y,z\}$.
 \end{itemize}
 
 \noindent In the light of what we just stated, it is possible to retrieve this final formulation of $\jacob_j$:
@@ -417,7 +417,7 @@ Given those mathematical concepts, it is possible to define the error between tw
     \jacob_i = -\jacob_j
 \end{empheq} 
 
-The reader might noticed how the new error function reduced the computational cost of the derivatives, due to the elimination of the highly non-linear function t2v. Moreover, the use of standard Euclidean \textit{minus} operator to express differences between transforms, leads to a better approximation by the first-order Taylor expansion of the perturbed error. This better approximation, translates into a wider converge basin of the optimization process and into an improved the avoidance of local minima.
+The reader might noticed how the new error function reduced the computational cost of the derivatives, due to the elimination of the highly non-linear function t2v. Moreover, the use of standard Euclidean \textit{minus} operator to express differences between transforms, leads to a better approximation by the first-order Taylor expansion of the perturbed error. This better approximation enlarges the converge basin of the optimization process and it improves the avoidance of local minima.
 
 \subsection{Benefits in the Re-linearization}\label{subsec:benefits}
 The reader might remember that, since also the measurements live on a non-Euclidean space, it is necessary to project the measurement information matrices through the \textit{box-minus} operator. Therefore, using the standard \textit{box-minus} described in Equation \ref{eq:standard_boxminus_se3} and given $\Pred_{ij}$ associated to $\Meas_{ij} = \Meas_{k}$, it is required to compute the following objects \textbf{at each iteration} of the LS optimization:
@@ -484,7 +484,7 @@ Going back to our problem, it is possible to transform the information matrix of
 
 \begin{enumerate}
     \item Compute the $N = 2n+1$ Sigma Points $\chi_{original}^{(i)} = (x_{original}^{(i)}, w_m^{(i)}, w_c^{(i)})$ from $\mathcal{N}(\mu_k, \Sigma_k)$, where $n$ is the minimal representation's dimension (in this case $n = 6$), $\mu_k = \text{t2v}(\Meas_{k})$ and $\Sigma_k = \Omega_k^{-1}$.
-    \item Compute the new position of $\chi_{transformed}^{(i)}$ as $x_{transformed}^{(i)} = \flatten{\v2t(x_{original}^{(i)})}$
+    \item Compute the new position of $\chi_{transformed}^{(i)}$ as $x_{transformed}^{(i)} = \flatten{\v2t(x_{original}^{(i)})}$.
     \item Reconstruct the new Gaussian $\mathcal{N}(\bar{\mu}_k, \bar{\Sigma}_k)$ from the Sigma Points $\chi_{transformed}^{(i)}$, leaving the parameters $w_m^{(i)}$ and $w_c^{(i)}$ unchanged.
 \end{enumerate}
 
@@ -622,7 +622,7 @@ Figure \ref{fig:sphere_gnadvanced} shows the outcomes of both the systems: clear
 In Subsection \ref{subsec:benefits}, it has been highlighted that converting the information matrices from a 6-dimensional space to a 12-dimensional one through the \textit{Unscented Transform} may generate multiple rank loss, thus, the matrix $\bar{\Sigma}_k = \bar{\Omega}_k^{-1}$ must be conditioned somehow to avoid singularities. Given this, it has been tested the effects of different conditioning methods, however the most promising ones where basically 3:
 
 \begin{enumerate}
-    \item \textbf{Soft Conditioning.} It is computed the \textit{Singular Value Decomposition} of matrix $\bar{\Sigma}_k = UDV^\star$, the it is added a \textit{non-zero} value $\epsilon$ only to the degenerated eigenvalues and finally it is computed the matrix $\bar{\Sigma}_k^{conditioned} = U\tilde{D}V^\star$.
+    \item \textbf{Soft Conditioning.} It is computed the \textit{Singular Value Decomposition} of matrix $\bar{\Sigma}_k = UDV^\star$, then it is added a \textit{non-zero} value $\epsilon$ only to the degenerated eigenvalues and finally it is computed the matrix $\bar{\Sigma}_k^{conditioned} = U\tilde{D}V^\star$.
     \item \textbf{Mid Conditioning.} This is the method actually used to obtain the results seen until now, and consists in applying a non-zero value $\epsilon$ to all the elements on the diagonal of $\bar{\Sigma}_k$. Reasonable values are $\epsilon \in [10^{-2}, 10^{-4}]$.
     \item \textbf{Hard Conditioning.} In this case, all the values outside the main diagonal are simply ignored - i.e. set to zero. 
 \end{enumerate}
