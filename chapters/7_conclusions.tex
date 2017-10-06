@@ -22,9 +22,9 @@ The reader might know that the time available to complete a Master's thesis is l
 \subsection{Expand the Addressed Problems}
 Until now, our system only deals with 3D pose-graph optimization or 3D bundle-adjustment. All state-of-the-art systems provide APIs to address a many of the typical problems mentioned in Chapter \ref{ch:problems}, both in 3D and 2D environments.
 
-Therefore, a good starting point might be the extension of the problem addressed by our current system to 2D scenarios. Then, once that core SLAM problems have been successfully addressed, all the other formulations could be added.
+Therefore, a good starting point might be the extension of the problems addressed by our current system to 2D scenarios. Then, once that core SLAM problems have been successfully addressed, all the other formulations could be added.
 
 \subsection{Hierarchical Approach}
-Hierarchical approaches represents the most interesting evolution of graph-based SLAM formulation. This formulation means to create multiple graph's \textit{views}, each of which has a different granularity: the bottom level represents the original input, while higher levels capture the structural properties of the environment in a always more compact manner. This approach is similar to what has been proposed in the work of Grisetti \textit{et al.} \cite{grisetti2010hogman}.
+Hierarchical approaches represents the most interesting evolution of graph-based SLAM formulation. This formulation allows to create multiple graph's \textit{views}, each of which has a different granularity: the bottom level represents the original input, while higher levels capture the structural properties of the environment in a always more compact manner. This approach is similar to what has been proposed in the work of Grisetti \textit{et al.} \cite{grisetti2010hogman}.
 
 This hierarchical formulation of the problem allows to update only the coarse structure of the scene during online mapping - i.e. only the highest level. When a substantial change happens in the top level, the update is propagated through the other lower levels, reducing the computational effort while providing an accurate estimate.

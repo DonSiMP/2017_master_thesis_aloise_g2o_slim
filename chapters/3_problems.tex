@@ -6,9 +6,9 @@ Pose Graphs represents the backbone of SLAM. In this problem, the state vector $
 
 The measurements are also 2D or 3D isometries that lie in $SE(2)$ or $SE(3)$. Therefore, an edge $\meas_{ij}$ that connects $\state_i$ with $\state_j$ represents the pose of node $j$ expressed in the reference frame of node $i$ - e.g. $\meas_{ij} =\: \T{i}{j}$. 
 
-This problem is very common in SLAM: suppose that we want to estimate the best trajectory of a robot, given only the \textit{odometry} measurements, in 2D. The odometry retrieves robot's motion from state $\state_i$ to $\state_j$ and encodes it into the transformation matrix $\T{i}{j}$. Moreover, supposing that the robot is also able to retrieve \textit{loop-closures}, this would mean that there is an edge between the nodes $i$ and $k$. The related transformation is encoded into the quantity $\meas_{ik} =\: \T{i}{k}$.
+This problem is very common in SLAM: suppose that we want to estimate the best trajectory of a 2D robot, given only the \textit{odometry} measurements. The odometry retrieves robot's motion from state $\state_i$ to $\state_j$ and encodes it into the transformation matrix $\T{i}{j}$. Moreover, supposing that the robot is also able to retrieve \textit{loop-closures}, this would mean that there is an edge between the nodes $i$ and $k$. The related transformation is encoded into the quantity $\meas_{ik} =\: \T{i}{k}$.
 
-Clearly, both states and measurements are non-euclidean. The extended parametrization of those quantities - as it has been state before - is given by an isometry, while a possible \textit{minimal representation} can be a $3$ vector $(t_{x}\: t_{y}\: \theta)^T$. The next step is to define the operators \textit{box-plus} and \textit{box-minus}. Therefore, we introduce the operators $t2v$ and $v2t$ that allow to map an isometry into a $3$ vector and vice versa. Given those operators, we will have the following relations:
+Clearly, both states and measurements are non-euclidean. The extended parametrization of those quantities - as it has been stated before - is given by an isometry, while a possible \textit{minimal representation} can be a $3$ vector $(t_{x}\: t_{y}\: \theta)^T$. The next step is to define the operators \textit{box-plus} and \textit{box-minus}. Therefore, we introduce the operators $t2v$ and $v2t$ that allow to map an isometry into a $3$ vector and vice versa. Given those operators, we will have the following relations:
 
 \begin{align}
     \label{eq:boxplus_se2}
@@ -57,10 +57,10 @@ Finally, Jacobians must be computed and, to do so, we apply a perturbation to th
     \label{eq:jac_se2}
 \end{equation}
 
-The reader might notice that the equation \ref{eq:error_perturbation_se2} is highly non-linear - as also the operators $\text{t2v}$ and $\v2t$ themselves - and this will translate into a less accurate approximation obtained from the first-order Taylor expansion of the error \ref{eq:error_se2} and into the computation complex derivatives given by \ref{eq:jac_i_se2} and \ref{eq:jac_j_se2}. The situation becomes even worse in a 3D environment, which will be better analyzed in the next Chapters. 
+The reader might notice that the equation \ref{eq:error_perturbation_se2} is highly non-linear - as also the operators $\text{t2v}$ and $\v2t$ themselves - and this will lead to a less accurate approximation obtained from the first-order Taylor expansion of the error \ref{eq:error_se2} and to the computation of complex derivatives given by \ref{eq:jac_i_se2} and \ref{eq:jac_j_se2}. The situation becomes even worse in a 3D environment, which will be better analyzed in the next Chapters. 
 
 \section{Pose-Landmarks Graphs}\label{sec:pose_land_graph}
-In this Section we will propose another common formulation of the problem. Landmarks represent the position of salient world points and here are used to optimize the trajectory of the robot, assuming that the position of those points is known in the environment. 
+In this Section we will propose another common formulation of the problem. Landmarks represent the position of salient world points and here are employed to optimize the trajectory of the robot, assuming that the position of those points is known in the environment. 
 
 Taking in consideration again the 2D problem for simplicity, the true position of those points in the world will be given by $\p = (p_x\: p_y)^T$. The measurements $\meas_k$ are the position of those point in the robot reference frame - namely $\meas_k = (z_x\:z_y)^T$. It is good to notice that while the state still belongs to $SE(2)$, the measurements now are Euclidean. Both the minimal and extended parametrization of the state can be taken from the previous formulation - so they will be a $3$ vector $\state = (t_x t_y \theta)$ and a 2D isometry $\SState =\: \T{W}{R}$ respectively. Also the operators $\boxplus$ and $\boxminus$ remain unchanged. The 2D isometry $\SState_i$ is composed by a rotational part $\rot_{\theta}$ and a translational one $\trans$, in formul\ae:
 
@@ -160,7 +160,7 @@ Here, for a 2D environment, it is possible to reuse what it has been shown in Se
 \noindent The complete Jacobian will be structured as in equation \ref{eq:jac_se2} and its components can be computed employing the \textit{chain-rule} for partial derivatives.
 
 \subsection{Pose-Point Constraints}\label{subsec:pose_point_constraints_2d}
-It is possible to refer to what it has been shown in Section \ref{sec:pose_land_graph} for this part. The reader might be notice that in this formulation the \textit{robot pose} is expressed in the world reference frame - i.e. $\SState =\, \T{W}{R}$ - and, thus, we must stick to this notation also for \textit{pose-point constraints}. Therefore, supposing that the measurement $\meas_{ij}$ relates the $i$-th pose with the $j$-th point - indicated with $\SState_i$ and $\state_j = \p_j$ respectively - the \textit{predicted measurement} $\pred_{ij}$, the \textit{error} $\error_{ij}$ and the \textit{perturbed error} are computed as follows:
+It is possible to refer to what it has been shown in Section \ref{sec:pose_land_graph} for this part. The reader might notice that in this formulation the \textit{robot pose} is expressed in the world reference frame - i.e. $\SState =\, \T{W}{R}$ - and, thus, we must stick to this notation also for \textit{pose-point constraints}. Therefore, supposing that the measurement $\meas_{ij}$ relates the $i$-th pose with the $j$-th point - indicated with $\SState_i$ and $\state_j = \p_j$ respectively - the \textit{predicted measurement} $\pred_{ij}$, the \textit{error} $\error_{ij}$ and the \textit{perturbed error} are computed as follows:
 
 \begin{align*}
     \pred_{ij} = h_{ij}(\SState) &= \SState_i^{-1} \, \p_j = \rot_{i}^T\,\p_j - \rot_{i}^T\trans_i \\
@@ -190,7 +190,7 @@ In this formulation the state parameters are $\SState_i$ \textit{and} $\p_j$, th
 Once that all the needed objects are defined, it is possible to embed them in the iterative algorithm to find the optimal state configuration.
 
 \section{Simultaneous Calibration Localization and Mapping}
-The formulations seen in the previous Sections, they all rely on the fact that all the specific \textit{inner robot parameters are known} - i.e. the position of the sensors mounted on the robot with respect to the robot reference frame. Performing SLAM with a wrong estimation of those parameters reduces the accuracy of the system, leading to non-consistent estimations even after the optimization process.
+The formulations seen in the previous Sections, they all rely on the fact that all the specific \textit{inner robot parameters are known} - e.g. the position of the sensors mounted on the robot with respect to the robot reference frame. Performing SLAM with a wrong estimation of those parameters reduces the accuracy of the system, leading to non-consistent estimations even after the optimization process.
 
 In general to acquire those information, it is possible to proceed in different ways:
 
@@ -261,4 +261,4 @@ Given those objects, the optimization process has to retrieve the optimal config
 
 \vspace{15px}
 
-Given the main notions about the most common formulations of the problem, in the next Chapter it will be analyzed more deeply the solution of 3D factor graphs, explaining also the main contributions brought by this work in this kind of problems.
+Given the main notions about the most common formulations of the problem, in the next Chapter it will be analyzed more in detail the solution for 3D factor graphs, explaining also the main contributions brought by this work.

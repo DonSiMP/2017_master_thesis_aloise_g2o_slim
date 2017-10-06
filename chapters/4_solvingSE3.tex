@@ -63,7 +63,9 @@ Another core aspect of sparse matrices is that there are several techniques to \
     row &= \begin{bmatrix}0 & 2 & 5 & 8 & 12 & 16 & 19\end{bmatrix}     
 \end{align*}
 
-\noindent \textit{List of Lists} (LIL) represents another effective and easy to implement storage method is the. In this case, each row-vector is represented as a list of pairs that denotes the column index and the element's value.
+\noindent The vector $row$ contains the indexes of the elements that correspond to the first non-zero entry of each row in the sparse matrix A.
+
+\textit{List of Lists} (LIL) represents another effective and easy to implement storage method is the. In this case, each row-vector is represented as a list of pairs that denotes the column index and the element's value.
 
 Recalling equation \ref{eq:sparse_hessian_structure}, since in this problem it has been considered only \textit{binary constraints}, the linearization of each edge generates $4$ block-contributions to the Hessian, namely:
 
