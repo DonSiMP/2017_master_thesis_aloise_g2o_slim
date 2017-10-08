@@ -11,7 +11,7 @@ As it as been already mentioned in Chapter \ref{ch:basics}, standard optimizatio
     \hessian \dx = -\bvec
 \end{equation*}
 
-\noindent Here, $\dx$ and $\bvec$ are dense vectors, while the \textit{Hessian}'s approximation $\hessian$ is a sparse matrix. The literature proposes a lot of methods to solve efficiently sparse linear systems. Those can be categorized in 2 main groups:
+\noindent Here, $\dx$ and $\bvec$ are dense vectors, while the \textit{Hessian}'s approximation $\hessian$ is a sparse matrix. The literature proposes a lot of methods to solve efficiently sparse linear systems. Those can be categorized in two main groups:
 
 \begin{enumerate}
     \item \textbf{Iterative methods} \cite{saad2003iterativeSPsolvers} that compute a solution iteratively.
@@ -32,11 +32,11 @@ As it as been already mentioned in Chapter \ref{ch:basics}, standard optimizatio
         \includegraphics[width=\textwidth]{figures/04_solvingSe3/h_l_amd.pdf}
         \label{fig:cholesky_fill_in_amd}
     \end{minipage}%
-    \caption{\textbf{Cholesky Fill-In.} The figure highlights the fill-in due to the factorization of a $(2000\times2000)$ symmetric PSD matrix: non-zero blocks are in white, while null-blocks in black. The first row illustrates the patterns of matrices $\hessian$ and its decomposition $\L$ - respectively on the left and on the right. In the bottom row, the same matrices after the permutation of $\hessian$ using the AMD ordering. It is clear the ordering contribution in reducing the fill-in of the factorization, minimizing the memory required to store $\L$ and the number of block-matrices operations.} 
+    \caption{\textbf{Cholesky Fill-In.} The figure highlights the fill-in due to the factorization of a $(2000\times2000)$ symmetric PSD matrix: non-zero blocks are depicted in white, while null-blocks in black. The first row illustrates the patterns of matrices $\hessian$ and its decomposition $\L$ - respectively on the left and on the right. In the bottom row, the same matrices after the permutation of $\hessian$ using the AMD ordering. It is clear the ordering contribution in reducing the fill-in of the factorization, minimizing the memory required to store $\L$ and the number of block-matrices operations.} 
     \label{fig:cholesky_fill_in}
 \end{figure}
 
-As already mentioned in Section \ref{sec:sparse_ls}, variable reordering techniques, that consists in applying a suitable permutation to the source matrix, are able to reduce dramatically the fill-in, allowing a faster decomposition. Several algorithm are proposed in the literature to compute the proper permutation - e.g. AMD, COLAMD. For the Cholesky $LU$ decomposition it is also possible to evaluate the pattern of the $L$ matrix before computing the actual decomposition, through the \textit{Symbolic Cholesky Decomposition}. The reader might appreciate the variable reordering contribution in Figure \ref{fig:cholesky_fill_in}.
+As already mentioned in Section \ref{sec:sparse_ls}, variable reordering techniques, that consists in applying a suitable permutation to the source matrix, are able to reduce dramatically the fill-in, allowing a faster decomposition. Several algorithm are proposed in literature to compute the proper permutation - e.g. AMD, COLAMD. For the Cholesky $LU$ decomposition it is also possible to evaluate the pattern of the $L$ matrix before computing the actual decomposition, through the \textit{Symbolic Cholesky Decomposition}. The reader might appreciate the variable reordering contribution in Figure \ref{fig:cholesky_fill_in}.
 
 In the remaining of the Section, it will be given a more detailed description on how to solve a sparse linear system using the Cholesky decomposition of the matrix $\hessian$.
 
@@ -86,7 +86,7 @@ In linear algebra, the Cholesky decomposition (or factorization) is the decompos
     \mathbf{A} = \L\,\L^\star
 \end{empheq}
 
-\noindent In this particular problem formulation, the matrices involved are real, therefore the conjugate transpose of $\L$ is simply its transposed $\L^T = \U$. In this sense, it represents the square-root operator for symmetric PSD matrices.
+\noindent In this particular problem formulation, the matrices involved are composed by real numbers, therefore the conjugate transpose of $\L$ becomes its transposed $\L^T = \U$. In this sense, it represents the square-root operator for symmetric PSD matrices.
 
 A more stable variant of the classical Cholesky decomposition is the \textbf{LDL} decomposition. In this case, the original matrix is decomposed into the following product:
 
@@ -95,7 +95,7 @@ A more stable variant of the classical Cholesky decomposition is the \textbf{LDL
     \mathbf{A} = \L \mathbf{D} \L^\star
 \end{equation}
 
-\noindent where $\L$ is a lower \textit{unit} triangular matrix - i.e. all the entries on the main diagonal are $1$ - and $\mathbf{D}$ a diagonal matrix. This variant requires the same space and computational effort with respect to the original one but avoids the square-roots extraction. In this way, even matrices that do not have a Cholesky decomposition can be factorized with the \textit{LDL} one. However, in this work, since the matrix is symmetric and PSD by construction, it has been chose the original Cholesky decomposition.
+\noindent where $\L$ is a lower \textit{unit} triangular matrix - i.e. all the entries on the main diagonal are $1$ - and $\mathbf{D}$ a diagonal matrix. This variant requires the same space and computational effort with respect to the original one but avoids the square-roots extraction. In this way, even matrices that do not have a Cholesky decomposition can be factorized with the \textit{LDL} one. However, in this work, since the matrices take into account are symmetric and PSD by construction, it has been chosen the original Cholesky decomposition.
 
 In general the computational complexity for the factorization of a $(n \times n)$ matrix is $O(n^3)$, requiring about $\nicefrac{n^3}{3}$ FLOPs. There are several algorithm available to compute the factorization, however, one of the most common is the \textit{Cholesky-Banachiewicz}. In this algorithm the computation starts from the top-left corner of the matrix $\L$ and proceeds the computation row-by-row as follows:
 
@@ -120,25 +120,25 @@ In general the computational complexity for the factorization of a $(n \times n)
     \end{cases}
 \end{empheq}
 
-This algorithm and also the \textit{Cholesky-Crout}'s one - that proceeds column-by-column instead - allow to perform the computation also \textit{in-place}. Moreover, both algorithms can be employed in sparse block-matrices, leading to a block-Cholesky factorization. The blocks are also computed as in Equation \ref{eq:cholesky_banachiewicz} but, in the block case, the \textit{square root} operator is applied to the matrix-block and it consists in the \textit{Cholesky decomposition of the block} itself.
+The \textit{Cholesky-Crout}'s algorithm, instead, is a column-wise version of the previous one. It is good to notice that both algorithms allow to perform the computation also \textit{in-place}. Moreover, both algorithms can be employed in sparse block-matrices, leading to a block-Cholesky factorization. The blocks are also computed as in Equation \ref{eq:cholesky_banachiewicz} but, in the block case, the \textit{square root} operator is applied to the matrix-block and it consists in the \textit{Cholesky decomposition of the block} itself.
 
 As it has been already mentioned, the main use of the Cholesky decomposition is in the solution of linear systems. Given a symmetric PSD real matrix $\mathbf{A}$, the solution of the linear system $\mathbf{A}\,\state = \bvec$ is computed through the following steps:
 
 \begin{enumerate}
-    \item \textbf{Cholesky factorization} of source matrix $\mathbf{A} = \L \L^T$
+    \item \textbf{Cholesky factorization} of the source matrix $\mathbf{A} = \L \L^T$
     \item \textbf{Forward substitution} to solve the linear system $\L \, \mathbf{y} = \bvec$
     \item \textbf{Backward substitution} to solve the linear system $\L^T\, \state = \mathbf{y}$
 \end{enumerate}
 
-Clearly, since in the problem in analysis $\hessian$ and its factorization $\L$ are sparse block-matrices, also $\bvec$ and $\mathbf{y}$ are \textit{dense block-vector} - with the number of blocks $N$ equal to the number of vertexes in the graph.
+Clearly, since in the problem in analysis $\hessian$ and its factorization $\L$ are sparse \textit{block-matrices}, also $\bvec$ and $\mathbf{y}$ are dense \textit{block-vector} - with the number of blocks $N$ equal to the number of vertexes in the graph.
 
 \section{Manifold Representation}\label{sec:manifold_se3}
 As it has been already stated at the begin of the Chapter, this work focuses on 3D formulations of pose-graph and bundle adjustment. In this Section it will be better analyzed the representation of all the objects required for the LS estimation in both the formulations.
 
 \subsection{3D Pose-Graph}\label{subsec:3d_pose_graphs}
-Pose-graph optimization in 3D represents the backbone of SLAM, allowing to estimate the robot trajectory \textit{in space} through MAP estimation. In this formulation, the state $\state$ includes the 3D orientation of the nodes which represent the main reason why pose-SLAM is a complex problem. Rotations in the space can be over-parametrized through a 3D rotation matrix $\rot \in SO(3)$. Therefore, the over-parametrized state can be represented by a 3D isometry $\SState = \,\T{W}{R} \in SE(3)$ which represents the robot pose in the world reference frame - i.e. a $(4 \times 4)$ homogeneous transformation matrix.
+Pose-graph optimization in 3D represents the backbone of SLAM, allowing to estimate the robot trajectory \textit{in space} through MAP estimation. In this formulation, the state $\state$ includes the 3D orientation of the nodes which represent the main reason why pose-SLAM is a complex problem. Rotations in space can be over-parametrized through a 3D rotation matrix $\rot \in SO(3)$. Therefore, the over-parametrized state can be represented by a 3D isometry $\SState = \,\T{W}{R} \in SE(3)$ which represents the robot pose in the world reference frame - i.e. a $(4 \times 4)$ homogeneous transformation matrix.
 
-A possible \textit{minimal representation} of the state can be through a $6$ vector $\state = (t_x\,t_y\,t_z\,\alpha\,\beta\,\gamma)^T$, where the triplet $\mathbf{r} = (\alpha\,\beta\,\gamma)^T$ represents the Euler Angles that compose the rotational part of the isometry, while $\trans = (t_x\,t_y\,t_z)^T$ the translational one. Summarizing, in formul\ae:
+A possible \textit{minimal representation} of the state can be a $6$ vector $\state = (t_x\,t_y\,t_z\,\alpha\,\beta\,\gamma)^T$, where the triplet $\mathbf{r} = (\alpha\,\beta\,\gamma)^T$ represents the Euler Angles that compose the rotational part of the isometry, while $\trans = (t_x\,t_y\,t_z)^T$ is the translational one. Summarizing, in formul\ae:
 
 \begin{equation*}
     \SState = 
@@ -220,7 +220,7 @@ The formalization for $SE(3)$ nodes remains unchanged from the previous Sub-Sect
 
 Landmarks' nodes lie on $\mathbb{R}^3$, so it is not necessary to define anything else - i.e. no \textit{box-plus}/\textit{box-minus} operator needed. As a consequence of this, a measurement $\meas_{ij} \in \mathbb{R}^3$ is a simple 3 vector that describes the position of point $j$ in the $i$-th pose reference frame.
 
-However, it is necessary to consider also the fact that the sensor's reference frame and the robot's one might not coincide, but they related through the transformation $\S = \,\T{R}{S} \in SE(3)$. Given this, the \textit{predicted measurement} given the state is:
+However, it is necessary to consider also the fact that the sensor's reference frame and the robot's one might not coincide, but they are related through the transformation $\S = \,\T{R}{S} \in SE(3)$. Thus, given the state, the \textit{predicted measurement} is:
 
 \begin{equation}
     \label{eq:prediction_se3r3}
@@ -377,7 +377,7 @@ Given those mathematical concepts, it is possible to define the error between tw
     \error_{ij}(\SState) = \Pred_{ij} - \Meas_{ij} &= \flatten{\SState_i^{-1}\, \SState_j} - \flatten{\Meas_{ij}}
 \end{align}
 
-\noindent It is good to notice that $\error_{ij}$ now is a 12 vector, therefore, the Jacobian's components $\jacob_i$ and $\jacob_j$ will be $(12\times6)$ matrices. Speaking of this, applying the state perturbation to the error will lead to the following relation:
+\noindent It is good to notice that $\error_{ij}$ now is a 12 vector, therefore, the Jacobian's components $\jacob_i$ and $\jacob_j$ will be $(12\times6)$ matrices. Speaking about this, applying the state perturbation to the error will lead to the following relation:
 
 \begin{equation}
     \label{eq:perturbed_error_se3}
@@ -394,8 +394,8 @@ Given those mathematical concepts, it is possible to define the error between tw
 \noindent Expanding the derivatives, it is possible to define the following - intuitively retrieved - objects:
 
 \begin{itemize}
-    \item  $\rot_{x0}^{\prime}$, $\rot_{y0}^{\prime}$ and $\rot_{z0}^{\prime}$ that represent derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the base rotation $\rot_k(\cdot)$, evaluated in 0 and with $k = \{x,y,z\}$;
-    \item  $\hat{\rot}_{x0}^{\prime}$, $\hat{\rot}_{y0}^{\prime}$, and $\hat{\rot}_{z0}^{\prime}$ that are the derivative with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the rotational part of matrix $\mathbf{G}$, computed as $\hat{\rot}_{k0}^{\prime} = \rot_{i}^T \, \rot_{k0}^{\prime} \, \rot_j$ with $k = \{x,y,z\}$;
+    \item  $\rot_{x0}^{\prime}$, $\rot_{y0}^{\prime}$ and $\rot_{z0}^{\prime}$ that represent derivatives with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the base rotation $\rot_k(\cdot)$, evaluated in 0 and with $k = \{x,y,z\}$;
+    \item  $\hat{\rot}_{x0}^{\prime}$, $\hat{\rot}_{y0}^{\prime}$, and $\hat{\rot}_{z0}^{\prime}$ that are the derivatives with respect to $\Delta\alpha$, $\Delta\beta$ and $\Delta\gamma$ of the rotational part of matrix $\mathbf{G}$, computed as $\hat{\rot}_{k0}^{\prime} = \rot_{i}^T \, \rot_{k0}^{\prime} \, \rot_j$ with $k = \{x,y,z\}$;
     \item $\hat{\mathbf{r}}_{k0}^{\prime}$ which describes the 9 vector obtained stacking the columns of $\hat{\rot}_{k0}^{\prime}$ - with $k = \{x,y,z\}$.
 \end{itemize}
 
@@ -429,9 +429,9 @@ The reader might remember that, since also the measurements live on a non-Euclid
     \tilde{\Omega}_k &= \left(\jacob_{\Meas_{k}} \: \Omega_k \: \jacob_{\Meas_{k}}^T\right)^{-1}
 \end{align}
 
-The error function based on the chordal distance that it has been proposed in the previous Sub-section, brings benefits also in this sense. In fact, since the operator employed to compute the error is the standard Euclidean \textit{minus}, it is not required to recompute the information matrix $\Omega_k$ at each iteration. 
+The error function based on the chordal distance that has been proposed in the previous Sub-section, brings benefits also in this sense. In fact, since the operator employed to compute the error is the standard Euclidean \textit{minus}, it is not required to recompute the information matrix $\Omega_k$ at each iteration. 
 
-It is good to notice that the information matrix associated with the measurement $\Meas_{k}$ is a $(6\times6)$ matrix $\Omega_k$ , since the state's minimal representation has dimension $6$ in this formalization. However, it is necessary to consider the contribute of function $\flatten{\cdot}$ in this process: the new error space has dimension $12$, thus it is necessary to project the information matrix into the new higher dimensional space. To this end, will now propose some new mathematical concepts useful in order to estimate the result of applying a non-linear transformation to a probability distribution function. 
+It is good to notice that the information matrix associated with the measurement $\Meas_{k}$ is a $(6\times6)$ matrix $\Omega_k$ , since the state's minimal representation has dimension $6$ in this formalization. However, it is necessary to consider the contribute of function $\flatten{\cdot}$ in this process: the new error space has dimension $12$, thus it is necessary to project the information matrix into the new higher dimensional space. To this end, it will be proposed now some new mathematical concepts useful in order to estimate the result of applying a non-linear transformation to a probability distribution function. 
 
 Given a Gaussian distribution $p(x) = \mathcal{N}(x; \mu, \Sigma)$ with mean $\mu$ and covariance $\Sigma$, it is possible to represent it through a set of weighted points called \textit{Sigma Points}. Each Sigma Point $\chi^i$ is described by a set of parameters:
 
@@ -450,7 +450,7 @@ Given a Gaussian distribution $p(x) = \mathcal{N}(x; \mu, \Sigma)$ with mean $\m
     \Sigma &= \sum_i w_c^i\:(x^i - \mu)(x^i - \mu)^T
 \end{align}
 
-It is good to notice that, if the original Gaussian distribution has dimension $n$, a suitable number of Sigma Point required to approximate without loosing information will be $N = 2n + 1$. In order to control how far the Sigma Points are sampled from the mean $\mu$ though, it is possible to tune the scalar parameters $\kappa \in \mathbb{R}^+$ and $\alpha \in (0,1]$. Therefore, the position of each Sigma Point is computed as follows:
+It is good to notice that, if the original Gaussian distribution has dimension $n$, a suitable number of Sigma Point required to approximate it without loosing information will be $N = 2n + 1$. In order to control how far the Sigma Points are sampled from the mean $\mu$ though, it is possible to tune the scalar parameters $\kappa \in \mathbb{R}^+$ and $\alpha \in (0,1]$. Therefore, the position of each Sigma Point is computed as follows:
 \begin{align}
     \label{eq:sigma_point_pos_0}
     x^{(0)} &= \mu \\
@@ -473,7 +473,7 @@ It is good to notice that, if the original Gaussian distribution has dimension $
     w_c^{(i)} = w_m^{(i)} &= \frac{1}{2(n + \lambda)}
 \end{align}
 
-This transformation between actual Gaussian parameters and the Sigma Points is called \textbf{Unscented Transform} \cite{julier2002scaledUT}. The core feature of this mathematical function is that it can be used to apply a transformation to a PDF in very straightforward way. Sticking to Gaussian PDFs, given $X_a \sim \mathcal{N}(x_a; \mu_a, \Sigma_a)$ and its Unscented Transform $x_a \sim \mathcal{UT}(x_a; x_a^{(i)}, w_m^{(i)}, w_c^{(i)})$, computing the Gaussian $X_b = g(X_a)$ can require a lot of effort. However, a good approximation of $X_b$ can be computed applying the function $g(\cdot)$ to the Unscented Transformation of $X_a$. This translates in the application of the $g(\cdot)$ function to each Sigma Point of $x_a$, namely
+This transformation between actual Gaussian parameters and the Sigma Points is called \textbf{Unscented Transform} \cite{julier2002scaledUT}. The core feature of this mathematical function is that it can be used to apply a transformation to a PDF in a straightforward way. Sticking to Gaussian PDFs, given $X_a \sim \mathcal{N}(x_a; \mu_a, \Sigma_a)$ and its Unscented Transform $x_a \sim \mathcal{UT}(x_a; x_a^{(i)}, w_m^{(i)}, w_c^{(i)})$, computing the Gaussian $X_b = g(X_a)$ can require a lot of effort. However, a good approximation of $X_b$ can be computed applying the function $g(\cdot)$ to the Unscented Transformation of $X_a$. This translates in the application of the $g(\cdot)$ function to each Sigma Point of $x_a$, namely
 
 \begin{empheq}[box={\mybluebox[3pt]}]{equation}
     \label{eq:pdf_function_UT}
@@ -488,7 +488,7 @@ Going back to our problem, it is possible to transform the information matrix of
     \item Reconstruct the new Gaussian $\mathcal{N}(\bar{\mu}_k, \bar{\Sigma}_k)$ from the Sigma Points $\chi_{transformed}^{(i)}$, leaving the parameters $w_m^{(i)}$ and $w_c^{(i)}$ unchanged.
 \end{enumerate}
 
-The adapted information matrix $\bar{\Omega}_k = \bar{\Sigma}_k^{-1}$ is a $(12\times12)$ matrix. However, since we are mapping a 6-dimensional space in a 12-dimensional space with only $N = 2n + 1 = 13$ Sigma Points, it is possible to retrieve covariance matrix subject to (multiple) rank-loss. Therefore, it is necessary to add a non-zero scalar $\epsilon$ to the main diagonal of $\bar{\Sigma}_k$, in order to do not have numerical problems during its inversion.
+The adapted information matrix $\bar{\Omega}_k = \bar{\Sigma}_k^{-1}$ is a $(12\times12)$ matrix. However, since we are mapping a 6-dimensional space in a 12-dimensional space with only $N = 2n + 1 = 13$ Sigma Points, it is possible to retrieve covariance matrix subject to (multiple) rank-loss. Therefore, it is necessary to add a non-zero scalar $\epsilon$ to the main diagonal of $\bar{\Sigma}_k$, in order to avoid numerical issues during its inversion.
 
 \begin{figure}[!hbt]
     \centering
@@ -514,7 +514,7 @@ Thanks to the Unscented Transform it is possible to have a fast and quite accura
 \section{Convergence Results}\label{sec:convergence_results}
 In the previous Sections, it has been proposed to the reader a complete overview of the theory underlying our optimization system. This Section, instead, proposes some tangible results brought by the novel approach described in this work.
 
-To test the convergence of the system, we took two reference pose-graphs and we add them different kind of noises in order to create multiple initial guess for the optimization algorithm. The graphs used are:
+To test the convergence of the system, we took two reference pose-graphs and we add to them different kind of noises in order to create multiple initial guess for the optimization algorithm. The graphs used are:
 
 \begin{enumerate}
     \item \textbf{Synthetic world:} that has 501 vertices and 4277 measurements (easier);
@@ -553,9 +553,9 @@ However, our system claims to be more effective to manipulate rotations. Consequ
     \label{fig:500p_awgn}
 \end{figure}
 
-With this initial guess, \g2o suffers from the non-linearities introduced by the $\v2t$ and $\text{t2v}$ functions as the reader might notice in Figure \ref{fig:500p_awgn_solution}. To confirm the qualitative result obtained, we decided to compare \g2o's \texttt{chi2} with the one obtained with our approach, iteration per iteration. In order to obtain comparable objects - and to not bias the comparison - it has been saved the graph obtained with our system at each iteration and evaluated its \textit{initial} \texttt{chi2} in \g2o. The result of this comparison is shown in figure \ref{fig:500p_awgn_chi2}.
+With this initial guess, \g2o suffers from the non-linearities introduced by the $\v2t$ and $\text{t2v}$ functions as the reader might notice in Figure \ref{fig:500p_awgn_solution}. To confirm the qualitative result obtained, we decided to compare \g2o's \texttt{chi2} with the one obtained with our approach, iteration by iteration. In order to obtain comparable objects - and to not bias the comparison - it has been saved the graph obtained with our system at each iteration and evaluated its \textit{initial} \texttt{chi2} in \g2o. The result of this comparison is shown in figure \ref{fig:500p_awgn_chi2}.
 
-In order to further confirm the quality of the chosen approach, is has been generated another initial guess for the same graph, but the noise figure was sampled from $\mathcal{N}(0, 1000)$. In this case both the systems struggle to find a solution in only 10 iteration, but the trend is better with our error function - see Figure \ref{fig:500p_gnadvanced}.
+In order to further confirm the quality of the chosen approach, is has been generated another initial guess for the same graph, but the noise figure was sampled from $\mathcal{N}(0, 1000)$. In this case both the systems struggle to find a solution in only 10 iterations, but the trend is better with our error function - see Figure \ref{fig:500p_gnadvanced}.
 
 \begin{figure}[!hbt]
     \centering    
@@ -597,7 +597,7 @@ The next step consists in applying both noise figures to the \textit{sphere} gra
 
 \noindent Given the complexity of the initial guess, we decided to perform more iterations with respect the previous graph - i.e. 100. Figure \ref{fig:sphere_awgn} shows the qualitative and quantitative results of both \g2o and our approach, after applying 6 DoF Gaussian noise - sampled from $\mathcal{N}(0,1)$. The reader might appreciate the fact that \g2o converges to a \textit{local minimum} far from the optimum, instead, our approach is able to \textbf{reach the optimum in less than 40 iterations}.
 
-Finally, in the last test it has been increased the rotational component of the noise, which in this case is sampled from $\mathcal{N}(0,1)$. In this extreme case without a kernel both the systems struggles to optimize the graph.
+Finally, in the last test it has been increased the rotational component of the noise, which, in this extreme case, is sampled from $\mathcal{N}(0,1)$. Here, without a kernel both the systems struggles to optimize the graph.
 
 \begin{figure}[!hbt]
     \centering    

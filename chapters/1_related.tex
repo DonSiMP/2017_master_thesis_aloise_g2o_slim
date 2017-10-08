@@ -42,14 +42,14 @@ Moreover, it employs a \textit{tree parametrization of the nodes} \cite{grisetti
 \section{G2O}\label{sec:g2o}
 The work of K\"ummerle \textit{et al.} \cite{kummerle2011g} is an open-source C++ frameworks for optimizing \textit{non-linear least squares problems} that can be represented as a graph. Its generality together with a cross-platform implementation made \texttt{g2o} one of the most successful graph optimization tool, which is employed in many state-of-the-art full SLAM systems. 
 
-This works focuses on efficiency, which is achieved at various levels: it exploits graph sparsity and takes advantage of the graph's special structure to perform fast optimization; it uses advanced methods - Cholesky decomposition through CHOLMOD library - to solve sparse linear system; finally, it utilizes modern processor's features to perform fast math operation optimizing cache usage - e.g. SIMD instructions. Moreover, this frameworks offers the possibility to choose between different algorithms - i.e. Gauss-Newton, Levenberg-Marquardt - and linear solvers - direct and iterative.
+This work focuses on efficiency, which is achieved at various levels: it exploits graph sparsity and takes advantage of the graph's special structure to perform fast optimization; it uses advanced methods - Cholesky decomposition through CHOLMOD library - to solve sparse linear system; finally, it utilizes modern processor's features to perform fast math operation optimizing cache usage - e.g. SIMD instructions. Moreover, this frameworks offers the possibility to choose between different algorithms - i.e. Gauss-Newton, Levenberg-Marquardt - and linear solvers - direct and iterative.
 
 Our approach still delivers comparable performances with respect to \texttt{g2o} while being lightweight and more simple to include in a full SLAM pipeline. In fact, \texttt{g2o} is a big framework, with over 40 thousands lines of code and, thus, its inclusion may add weight to the system.
 
 \section{GT-SAM}\label{sec:gtsam}
 GT-SAM is a C++ library developed by Dellaert \textit{et al.} \cite{dellaert2012gtsam} at the Georgia Institute of Technology, which provides solution to a wide range of SLAM and Structure From Motion (SfM) problems, based on factor-graph optimization. It provides both C++ and MATLAB implementations that allow to easily develop and visualize problem solutions. 
 
-This works - like it has been previously seen in \g2o - also focuses on efficient optimization and takes advantage of the graph sparsity to deliver fast and accurate performances. However, this framework is even more big and complex - over 300 thousands lines of code - making it very difficult to unravel and understand what is under the hood.
+This work - like it has been previously seen in \g2o - also focuses on efficient optimization and takes advantage of the graph sparsity to deliver fast and accurate performances. However, this framework is even more big and complex - over 300 thousands lines of code - making it very difficult to unravel and understand what is under the hood.
 
 \section{HOG-Man}\label{sec:hogman}
 Grisetti \textit{et al.} in their work \cite{grisetti2010hogman} proposed an optimization system designed for accurate, fast and memory efficient on-line operations: \textit{HOG-Man} - which stands for Hierarchical Optimization on Manifolds.

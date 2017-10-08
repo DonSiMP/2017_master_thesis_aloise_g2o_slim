@@ -1,8 +1,8 @@
 \chapter{Use Cases}\label{ch:cases}
-As already mentioned, the system developed aims to deliver real time performances also when used in real world applications. Furthermore, the system provides some easy-to-embed APIs in order to be easily integrated in a full SLAM pipeline. Therefore, in this Chapter we provide two front-end systems developed in the Lab-Rococo at Sapienza University that actually use this work as back-end. In both cases, our system is used to perform 3D \textit{pose-graph} optimization.
+As already mentioned, the system developed aims to deliver real-time performances also when used in real-world applications. Furthermore, the system provides some easy-to-embed APIs in order to be easily integrated in a full SLAM pipeline. Therefore, in this Chapter we provide two front-end systems developed in the \hyperref{http://labrococo.dis.uniroma1.it/}{}{}{Ro.Co.Co.Lab.} at Sapienza University that actually use this work as their back-end. In both cases, our system is used to perform 3D \textit{pose-graph} optimization.
 
 \section{ProSLAM}\label{sec:proslam}
-The work of Schlegel \textit{et al.} \cite{schlegel2017proslam} presents a stereo visual system capable of mapping dynamic large-scale environments called ProSLAM. The system is designed with simplicity and modularity in mind and, thus, it is easy to implement and to understand also from people who are not Computer Vision or SLAM experts.
+The work of Schlegel \textit{et al.} \cite{schlegel2017proslam} presents a stereo-visual system capable of mapping dynamic large-scale environments called ProSLAM. The system is designed with simplicity and modularity in mind and, thus, it is easy to implement and to understand also from people who are not Computer Vision or SLAM experts.
 
 This works is also almost entirely self-contained and employs only a minimal set of external libraries - among which there is the library described in this work.
 
@@ -17,7 +17,7 @@ Landmarks acquired in a nearby region define a \textit{local map}; each local ma
 
 Re-localization is more complex to address with respect to tracking. In fact, to achieve this goal it is necessary to compare descriptors of all the local-maps. This is an expensive operation, and it is efficiently performed by the \textit{Hamming Binary Search Tree} (HBST) \cite{schlegel2016hbst} library. The system periodically triggers graph optimization and this helps also the re-localization process.
 
-It is good to notice that ProSLAM runs on \textit{single thread}, delivering performances comparable with other more complex and multi-thread systems - e.g. ORB-SLAM2 \cite{mur2017orb-slam2} or LSD-SLAM \cite{engel2014lsd-slam}.
+It is good to notice that ProSLAM runs on \textit{single thread}, delivering performances comparable with other more complex and multi-thread systems - e.g. ORB-SLAM2 \cite{mur2017orb-slam2}.
 
 \section{ProSLAM\_stud}\label{sec:froslam}
 Colosi \textit{et al.} propose in their work ProSLAM\_stud \cite{colosi2017froslam} a further iteration on minimalism from original ProSLAM. It is a \textit{Master thesis} work, therefore its approach is more didactic than the original one. However, the system still delivers quite good performances both in terms of speed and accuracy. 
@@ -32,7 +32,7 @@ Both ProSLAM and ProSLAM\_stud have been tested on two sequences of the KITTI da
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.5\textwidth]{figures/06_use_cases/kitti_setup.png}
-    \caption{\textbf{KIT AnnieWAY acquisition method.} The KITTI dataset is acquired using a normal station wagon car, equipped with several sensor: a stereo-rig of high resolution cameras, Velodyne 3D laser scanner and a localization unit based on GPS/GLONASS/IMU.}
+    \caption{\textbf{KIT AnnieWAY acquisition method.} The KITTI dataset is acquired using an autonomous driving car, equipped with several sensor: a stereo-rig of high resolution cameras, Velodyne 3D laser scanner and a localization unit based on GPS/GLONASS/IMU.}
     \label{fig:kit_annieway}
 \end{figure}
 
