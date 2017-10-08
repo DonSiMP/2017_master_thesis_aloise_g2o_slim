@@ -1,5 +1,5 @@
 \chapter{Conclusions}\label{ch:conclusions}
-In this Master's thesis, it has been reached the goal of creating from scratch a \textit{graph optimizer} able to cope with the principal 3D SLAM problems in real-time - namely \textit{pose-graph optimization} and \textit{Bundle Adjustment}.
+In this Master's thesis, it has been reached the goal of creating from scratch a \textit{graph optimizer} able to cope with the principal 3D SLAM problems in real-time - namely \textit{pose} and \textit{pose-landmark} graph optimization.
 
 The system, as mentioned in Chapter \ref{ch:implementation}, delivers quite good performances despite its minimal and didactic approach, combining simplicity and effectiveness. It is entirely developed in C++ in less than $5500$ lines of code and employs only essential external libraries. This makes our work comprehensible also by researchers that approach to this problem for the first time and are not SLAM experts.
 
@@ -20,7 +20,7 @@ The system can be employed both for on-line and off-line applications, for examp
 The reader might know that the time available to complete a Master's thesis is limited, and this biased a lot project development. Many compromises have been made and a lot of aspects are not addressed. In this Section it is proposed an insight of what might be the future iterations of this work.
 
 \subsection{Expand the Addressed Problems}
-Until now, our system only deals with 3D pose-graph optimization or 3D bundle-adjustment. All state-of-the-art systems provide APIs to address a many of the typical problems mentioned in Chapter \ref{ch:problems}, both in 3D and 2D environments.
+Until now, our system only deals with 3D pose or 3D pose-landmark graph optimization. All state-of-the-art systems provide APIs to address a many of the typical problems mentioned in Chapter \ref{ch:problems}, both in 3D and 2D environments.
 
 Therefore, a good starting point might be the extension of the problems addressed by our current system to 2D scenarios. Then, once that core SLAM problems have been successfully addressed, all the other formulations could be added.
 

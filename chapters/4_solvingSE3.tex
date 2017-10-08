@@ -1,6 +1,6 @@
 \chapter{Solving Factor Graphs with SE3 Variables}\label{ch:solvingSE3}
 
-In this project it has been mainly addressed the optimization of \textbf{3D factor graphs}. In particular it has been developed from scratch a back-end system to efficiently solve \textit{pose-graph optimization} and \textit{bundle adjustment}.
+In this project it has been mainly addressed the optimization of \textbf{3D factor graphs}. In particular it has been developed from scratch a back-end system to efficiently perform \textit{pose} and \textit{pose-landmark} graph optimization.
 
 The reader might feel already comfortable with the formulation of those problems, thus, in this Section will be shown more in detail the approaches used in order to achieve \textbf{real-time performances} and how $SE(3)$ constraints have been manipulated in order to \textbf{reduce problem's non-linearity}. 
 
@@ -133,7 +133,7 @@ As it has been already mentioned, the main use of the Cholesky decomposition is 
 Clearly, since in the problem in analysis $\hessian$ and its factorization $\L$ are sparse \textit{block-matrices}, also $\bvec$ and $\mathbf{y}$ are dense \textit{block-vector} - with the number of blocks $N$ equal to the number of vertexes in the graph.
 
 \section{Manifold Representation}\label{sec:manifold_se3}
-As it has been already stated at the begin of the Chapter, this work focuses on 3D formulations of pose-graph and bundle adjustment. In this Section it will be better analyzed the representation of all the objects required for the LS estimation in both the formulations.
+As it has been already stated at the begin of the Chapter, this work focuses on 3D formulations of pose and pose-landmark graphs. In this Section it will be better analyzed the representation of all the objects required for the LS estimation in both the formulations.
 
 \subsection{3D Pose-Graph}\label{subsec:3d_pose_graphs}
 Pose-graph optimization in 3D represents the backbone of SLAM, allowing to estimate the robot trajectory \textit{in space} through MAP estimation. In this formulation, the state $\state$ includes the 3D orientation of the nodes which represent the main reason why pose-SLAM is a complex problem. Rotations in space can be over-parametrized through a 3D rotation matrix $\rot \in SO(3)$. Therefore, the over-parametrized state can be represented by a 3D isometry $\SState = \,\T{W}{R} \in SE(3)$ which represents the robot pose in the world reference frame - i.e. a $(4 \times 4)$ homogeneous transformation matrix.
@@ -208,15 +208,15 @@ Instead, to retrieve the Euler given the rotation matrix $\rot$ - that is done i
 
 The reader might notice the non-linearities introduced by the functions t2v and v2t. Those imply the computation of complex non-linear derivatives to retrieve the Jacobian in the linearization phase. However, this problem - and the solution proposed in this work - will be better analyzed in the next Section.
 
-\subsection{3D Bundle Adjustment}\label{subsec:3d_bundle_adj}
-In this formulation, as already explained in Section \ref{sec:bundle_adjustment_problem}, the system has to estimate both the robot trajectory and the position of salient world points - i.e. the 3D landmarks. Therefore, the system's \textit{state} and \textit{increment} are described as follows:
+\subsection{3D Pose-Landmark}\label{subsec:3d_pose_landmark}
+In this formulation, as already explained in Section \ref{sec:landmark_full_SLAM}, the system has to estimate both the robot trajectory and the position of salient world points - i.e. the 3D landmarks. Therefore, the system's \textit{state} and \textit{increment} are described as follows:
 
 \begin{align*}
     \SState &= \left(\overbracket{\SState^R_1, ..., \SState^R_N}^{N poses}\: |\: \overbracket{\state^L_{N+1}, ..., \state^L_{N+M}}^{M landmarks}\right) \\
     \dx &= \left(\overbracket{\dx^R_1, ..., \dx^R_N}^{N poses}\: |\: \overbracket{\dx^L_{N+1}, ..., \dx^L_{N+M}}^{M landmarks}\right)
 \end{align*}
 
-The formalization for $SE(3)$ nodes remains unchanged from the previous Sub-Section, therefore, it is necessary to characterize only the nodes that describe the landmarks. 
+The formalization for $SE(3)$ nodes remains unchanged from the previous Subsection, therefore, it is necessary to characterize only the nodes that describe the landmarks. 
 
 Landmarks' nodes lie on $\mathbb{R}^3$, so it is not necessary to define anything else - i.e. no \textit{box-plus}/\textit{box-minus} operator needed. As a consequence of this, a measurement $\meas_{ij} \in \mathbb{R}^3$ is a simple 3 vector that describes the position of point $j$ in the $i$-th pose reference frame.
 

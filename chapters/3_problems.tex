@@ -59,7 +59,7 @@ Finally, Jacobians must be computed and, to do so, we apply a perturbation to th
 
 The reader might notice that the equation \ref{eq:error_perturbation_se2} is highly non-linear - as also the operators $\text{t2v}$ and $\v2t$ themselves - and this will lead to a less accurate approximation obtained from the first-order Taylor expansion of the error \ref{eq:error_se2} and to the computation of complex derivatives given by \ref{eq:jac_i_se2} and \ref{eq:jac_j_se2}. The situation becomes even worse in a 3D environment, which will be better analyzed in the next Chapters. 
 
-\section{Pose-Landmarks Graphs}\label{sec:pose_land_graph}
+\section{Pose-Landmark Graphs}\label{sec:pose_land_graph}
 In this Section we will propose another common formulation of the problem. Landmarks represent the position of salient world points and here are employed to optimize the trajectory of the robot, assuming that the position of those points is known in the environment. 
 
 Taking in consideration again the 2D problem for simplicity, the true position of those points in the world will be given by $\p = (p_x\: p_y)^T$. The measurements $\meas_k$ are the position of those point in the robot reference frame - namely $\meas_k = (z_x\:z_y)^T$. It is good to notice that while the state still belongs to $SE(2)$, the measurements now are Euclidean. Both the minimal and extended parametrization of the state can be taken from the previous formulation - so they will be a $3$ vector $\state = (t_x t_y \theta)$ and a 2D isometry $\SState =\: \T{W}{R}$ respectively. Also the operators $\boxplus$ and $\boxminus$ remain unchanged. The 2D isometry $\SState_i$ is composed by a rotational part $\rot_{\theta}$ and a translational one $\trans$, in formul\ae:
@@ -125,10 +125,10 @@ Since the measurements are Euclidean - i.e. they lie in $\mathbb{R}^2$ - the err
 
 Now that we defined every aspect of the problem, it is possible to embed everything in the already seen Least-Squares algorithm to find the optimal state.
 
-\section{Bundle Adjustment}\label{sec:bundle_adjustment_problem}
+\section{Pose and Landmark Estimation}\label{sec:landmark_full_SLAM}
 This problem instantiation is more complex with respect what has been proposed in the previous Sections. In Section \ref{sec:pose_graphs} the constraints were only of type \textit{pose} - i.e. they lie on $SE(n)$ - while in Section \ref{sec:pose_land_graph} they were only of type \textit{point} - i.e. they lie on $\mathbb{R}^n$.
 
-Bundle Adjustment (BA) aims to estimate \textit{both} the robot trajectory \textit{and} the world position of the landmarks, given constraints of type \textit{pose} and \textit{point}. Considering again the 2D case for simplicity, the state will be:
+In this case we want to estimate \textit{both} the robot trajectory \textit{and} the world position of the landmarks, given constraints of type \textit{pose} and \textit{point}. Considering again the 2D case for simplicity, the state will be:
 
 \begin{equation}
     \SState = \left(\overbracket{\SState^R_1, ..., \SState^R_N}^{N \;poses}\: |\: \overbracket{\state^L_{N+1}, ..., \state^L_{N+M}}^{M \;landmarks}\right)
@@ -189,7 +189,21 @@ In this formulation the state parameters are $\SState_i$ \textit{and} $\p_j$, th
 
 Once that all the needed objects are defined, it is possible to embed them in the iterative algorithm to find the optimal state configuration.
 
-\section{Simultaneous Calibration Localization and Mapping}
+\section{Bundle Adjustment}\label{sec:bundle_asjustment}
+The Bundle Adjustment problem is a very common formulation in \textit{Photogrammetry} and it is similar to the pose-landmark one seen in Section \ref{sec:pose_land_graph}. In this case, the state is composed by both \textit{camera poses} - $SE(3)$ objects - and 3D points, but those last ones are observed through their \textit{projection} onto the \textit{image plane}.
+
+Therefore, given a set of 3D points $\SState_j$ viewed by a set of camera matrices $P^i$ and indicating with $\state_j^i$ the image coordinates of the $j$-th point projected through the $i$-th camera, we want to find the most-likely configuration of camera matrices and 3D points that suits the observations. This formulation corresponds to the minimization of the following cost function:
+
+\begin{equation}
+    \min_{\hat{P}^i, \hat{\SState}_j} \sum_{i,j} d\left(\hat{P}^i\,\hat{\SState}_j, \state_j^i\right)^2
+    \label{eq:reprojection_error}
+\end{equation}
+
+\noindent where $d(\cdot, \cdot)$ is the Euclidean distance function. The distance between the 3D point projected through $P$ onto the image plane and the measured image coordinates is known as the \textit{reprojection error}.
+
+The reader might have already noticed that the measurements lie on $\mathbb{R}^2$ - since they represent image points. Clearly, the prediction, error perturbation and Jacobian are also different, although those are not explicitly computed here, since they are not strictly related to this work; further information on this topic can be found in \cite{hartley2003multiple, szeliski2010computer, indelman2015incremental}.
+
+\section{Simultaneous Calibration Localization and Mapping}\label{sec:sclam}
 The formulations seen in the previous Sections, they all rely on the fact that all the specific \textit{inner robot parameters are known} - e.g. the position of the sensors mounted on the robot with respect to the robot reference frame. Performing SLAM with a wrong estimation of those parameters reduces the accuracy of the system, leading to non-consistent estimations even after the optimization process.
 
 In general to acquire those information, it is possible to proceed in different ways:

@@ -65,7 +65,7 @@ The Jacobians $\jacob_i$ and $\jacob_j$ are using Equations \ref{eq:jac_i_se3} a
 \subsection{Sparse Linear Solver}\label{subsec:sparse_linear_solver}
 The linear solver employed is based on Cholesky decomposition of the Hessian - i.e. Subsection \ref{subsec:cholesky_dec_general}. Clearly, the first thing needed in order to efficiently solve a sparse linear system is a proper matrix data-structure.
 
-In this work, sparse matrices are represented through the \texttt{SparseBlockMatrix} object, which uses as storage method the \textit{List of Lists} (LIL) approach. It is possible to select between \textit{fixed-size} blocks - i.e. in pose graph optimization - and \textit{dynamic} blocks - i.e. in bundle adjustment. In the former case it is possible to take advantage of CPU cache while doing matrix operations and, thus, boosting the computation; using dynamic blocks matrix operations are slower but it adds flexibility to the system. \texttt{SparseBlockMatrix} main feature is the fact that object's memory - used to actually \textit{store} the blocks - can be isolated from the objects itself. Therefore, the actual matrix is just a \textit{view} of those blocks, intended as a LIL of pointers to those memory blocks. This formulation allows to manipulate the \texttt{SparseBlockMatrix} \textbf{without touching the memory}, just rearranging matrix's \textit{view}. The object \texttt{DenseBlockVector} is designed  on the basis of this and it used to store dense vectors like the right-hand-side vector $\bvec$ and the update vector $\dx$.
+In this work, sparse matrices are represented through the \texttt{SparseBlockMatrix} object, which uses as storage method the \textit{List of Lists} (LIL) approach. It is possible to select between \textit{fixed-size} blocks - i.e. in pose graph optimization - and \textit{dynamic} blocks - i.e. in pose-landmark graph optimization. In the former case it is possible to take advantage of CPU cache while doing matrix operations and, thus, boosting the computation; using dynamic blocks matrix operations are slower but it adds flexibility to the system. \texttt{SparseBlockMatrix} main feature is the fact that object's memory - used to actually \textit{store} the blocks - can be isolated from the objects itself. Therefore, the actual matrix is just a \textit{view} of those blocks, intended as a LIL of pointers to those memory blocks. This formulation allows to manipulate the \texttt{SparseBlockMatrix} \textbf{without touching the memory}, just rearranging matrix's \textit{view}. The object \texttt{DenseBlockVector} is designed  on the basis of this and it used to store dense vectors like the right-hand-side vector $\bvec$ and the update vector $\dx$.
 
 Before computing the Cholesky factorization, Hessian's non-zero pattern is analyzed through the SuiteSparse library in order to retrieve a suitable ordering that reduces Cholesky's fill-in. The user can choose between different algorithms - i.e. AMD, COLAMD, CHOLMOD - or let the system retrieve the best one.
 
@@ -112,7 +112,7 @@ However, for \textit{pose-pose} constraints, given the product $\mathbf{A} = \ja
 \noindent In this way the computation is performed just one time, thus there is a $75\%$ boost in terms of speed. Furthermore, since $\mathbf{A}$ is a symmetric matrix, it is possible to compute just the upper triangular part and then replicate it in the lower triangular, reducing even more the computational time.
 
 \section{Performance Results}\label{sec:performance_results}
-The library developed has been tested on different synthetic datasets both in \textit{pose-graph} and \textit{Bundle Adjustment} scenarios. All the test have been performed on a Lenovo ThinkPad W540 laptop equipped with:
+The library developed has been tested on different synthetic datasets both in \textit{pose-graph} and \textit{pose-landmark} scenarios. All the test have been performed on a Lenovo ThinkPad W540 laptop equipped with:
 
 \begin{itemize}
     \item CPU: Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz
@@ -157,7 +157,7 @@ The reader might notice how well our systems behaves, delivering performances th
     \label{tab:total_optimization_time}
 \end{table}
 
-For Bundle Adjustment graphs, our systems struggles to obtain the same results seen in pose-graph optimization. This is mainly due to use of a \texttt{SparseBlockMatrix} with dynamic blocks, that makes our implementation slower than its competitor \texttt{g2o}, as it is reported in Figure \ref{fig:step_time_BA} and Table \ref{tab:total_optimization_time_BA}.
+For pose-landmark graphs, our systems struggles to obtain the same results seen in pose-graph optimization. This is mainly due to use of a \texttt{SparseBlockMatrix} with dynamic blocks, that makes our implementation slower than its competitor \texttt{g2o}, as it is reported in Figure \ref{fig:step_time_BA} and Table \ref{tab:total_optimization_time_BA}.
 
 \begin{figure}[!hbt]
     \centering
