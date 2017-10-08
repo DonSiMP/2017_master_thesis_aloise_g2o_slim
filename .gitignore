@@ -9,7 +9,7 @@
 *.lof
 *.lot
 
-
+thesis.run.xml
 
 papers/
 figures/raw
