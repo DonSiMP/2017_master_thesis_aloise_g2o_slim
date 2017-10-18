@@ -88,7 +88,8 @@
 % Enables clickable links in the PDF and additional PDF specific configuration options.
 \usepackage[
             colorlinks=true,
-            linkcolor=darkblue, urlcolor=darkblue, citecolor=darkblue,
+            linkcolor=black, urlcolor=black, citecolor=black,
+            %linkcolor=darkblue, urlcolor=darkblue, citecolor=darkblue,
             raiselinks=true,
             bookmarks=true,
             bookmarksopenlevel=1,
